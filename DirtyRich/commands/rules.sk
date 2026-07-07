@@ -1,0 +1,56 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+command /rules [<text>]:
+	description: Open the rules.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/rules
+	prefix: {@cmd-prefix}
+	aliases: /rule
+	trigger:
+		create a gui with virtual chest inventory with 5 rows named "Rules":
+			make gui slot (integers from 0 to 8)   with white stained glass pane without tooltip
+			make gui slot (integers from 36 to 44) with gray stained glass pane without tooltip
+			make gui slot 40 with red dye named "{@error2}&lCLOSE":
+				close player's inventory
+				stop
+
+			clear {_game::*}
+			clear {_chat::*}
+			add " &8● &fTreat all players with respect.%nl%&f   Toxicity, harassment, or bullying is not allowed." to {_chat::*}
+
+			add " &8● &fNo cheating or unfair advantages. This includes hacked clients, %nl%&f   macros that give an advantage, exploits, or bug abuse." to {_game::*}
+			 
+			add " &8● &fNo advertising other servers, services, or communities in any form." to {_chat::*}
+
+			add " &8● &fDo not scam, trick, or intentionally mislead other players." to {_game::*}
+
+			add " &8● &fRespect staff and their decisions. %nl%&f   If you disagree, use the proper appeal methods." to {_chat::*}, {_game::*}
+
+			add " &8● &fDo not attempt to bypass any rules or punishments." to {_chat::*}, {_game::*}
+
+			add " &8● &fKeep chat appropriate. %nl%&f   Excessive spam, profanity, or inappropriate content is not allowed." to {_chat::*}
+
+			add " &8● &fDo not impersonate staff or other players." to {_chat::*}
+
+			add " &8● &fUse common sense and play fairly." to {_chat::*}, {_game::*}
+
+			add " &8● &fDon't boost any players, no exceptions." to {_game::*}
+
+			add " &8● &fTrading or giving digital currency to alt accounts is not allowed." to {_game::*}
+
+
+			make gui slot 21 with book named "{@c1}&lCHAT RULES" with lore "&8ʀᴜʟᴇꜱ", "", {_chat::*}, "", "&7ᴊᴏɪɴ ᴛʜᴇ ᴅɪꜱᴄᴏʀᴅ ꜱᴇʀᴠᴇʀ", "&7ꜰᴏʀ ᴀʟʟ ᴛʜᴇ ʀᴜʟᴇꜱ."
+			make gui slot 23 with book named "{@c1}&lGAME RULES" with lore "&8ʀᴜʟᴇꜱ", "", {_game::*}, "", "&7ᴊᴏɪɴ ᴛʜᴇ ᴅɪꜱᴄᴏʀᴅ ꜱᴇʀᴠᴇʀ", "&7ꜰᴏʀ ᴀʟʟ ᴛʜᴇ ʀᴜʟᴇꜱ."
+
+			open the last gui to player

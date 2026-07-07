@@ -1,0 +1,405 @@
+options:
+	SINGLE_TIME_OPENABLE_KEY: 100
+
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+function getHead(id: string) :: item:
+	if length of {_id} > 16:
+		set {_n} to nbt from "{""minecraft:profile"":{properties:[{name:""textures"",value:""%{_id}%""}]}}"
+		return player head with nbt {_n}
+	return skull of ({_id} parsed as offlineplayer)
+
+import:
+	java.text.NumberFormat
+	java.util.Locale
+
+function Format(n: number) :: string:
+	return NumberFormat.getNumberInstance(Locale.US).format({_n})
+
+function registerTalisman(type: string, amount: number):: item:
+	if {_amount} >= 250:
+		set {_size} to "ʙɪɢ"
+	else if {_amount} >= 100:
+		set {_size} to "ᴍᴇᴅɪᴜᴍ"
+	else:
+		set {_size} to "ꜱᴍᴀʟʟ"
+
+	set {_item} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzFmMzIwMDI1MTQyNTk2Mzk2MDMyY2MwMDg4ZTJhYzM2NDg5ZjI0Y2ZhNWU5ZGRhMTNlMDgxY2Y2OWY3N2Y0ZCJ9fX0=")
+	set component item name of {_item} to mini message from raw "<reset><white><sprite:items:item/prismarine_crystals><reset> <#56ffd5><b>TALISMAN <reset><gray>(<white>%{_size}%<gray>)"
+	if {_type} = "money":
+		set the lore of {_item} to "&8ᴛᴀʟɪꜱᴍᴀɴ", "", "&fBOOSTER: {@success2}&lMONEY", "&fAMOUNT: {@success2}&l+{@c1}&l%{_amount}%%%", "", "&7ᴘᴜᴛ ɪᴛ ɪɴ ᴏꜰꜰ-ʜᴀɴᴅ ᴛᴏ ᴀᴄᴛɪᴠᴀᴛᴇ"
+
+	return hideAttributes({_item})
+
+
+function registerHoneyPouch(min: number, max: number):: item:
+	if {_max} >= 500:
+		set {_size} to "ʙɪɢ"
+	else if {_max} >= 100:
+		set {_size} to "ᴍᴇᴅɪᴜᴍ"
+	else:
+		set {_size} to "ꜱᴍᴀʟʟ"
+
+	set {_item} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjkwNmJmZDgxN2NjNTgxOGM3NjIwZTI4OGY0ZTQxMzAxNDMxOGMwYmNiYjVlY2Q2ZGE4YTU5MjNkNTFjNTJmMiJ9fX0=")
+	set component item name of {_item} to mini message from raw "<sprite:items:item/honey_bottle> <#ffff28><b>HONEY POUCH <reset><gray>(<white>%{_size}%<gray>)"
+	set the lore of {_item} to "&8ʜᴏɴᴇʏ ᴘᴏᴜᴄʜ", "", "&fREWARDS: {@c1}&l%Format({_min})% HONEY &f- {@c1}&l%Format({_max})% HONEY", "", "&7ʀɪɢʜᴛ-ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
+
+	return hideAttributes({_item})
+
+function registerMoneyPouch(min: number, max: number):: item:
+	if {_max} >= 100000:
+		set {_size} to "ʙɪɢ"
+	else if {_max} >= 50000:
+		set {_size} to "ᴍᴇᴅɪᴜᴍ"
+	else:
+		set {_size} to "ꜱᴍᴀʟʟ"
+
+	set {_item} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWZkMTA4MzgzZGZhNWIwMmU4NjYzNTYwOTU0MTUyMGU0ZTE1ODk1MmQ2OGMxYzhmOGYyMDBlYzdlODg2NDJkIn19fQ==")
+	set component item name of {_item} to mini message from raw "<sprite:gui:mob_effect/hero_of_the_village> <#ffff28><b>MONEY POUCH <reset><gray>(<white>%{_size}%<gray>)"
+	set the lore of {_item} to "&8ᴍᴏɴᴇʏ ᴘᴏᴜᴄʜ", "", "&fREWARDS: {@success2}$%format({_min})% &f- {@success2}$%Format({_max})%", "", "&7ʀɪɢʜᴛ-ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
+
+	return hideAttributes({_item})
+
+on right click:
+	if line 1 of lore of player's tool contains "ᴘᴏᴜᴄʜ":
+		set {_lore} to line 1 of lore of player's tool
+		set {_line::*} to line 3 of lore of player's tool split at " "
+		set {_min} to unformatted {_line::2}
+		set {_max} to unformatted {_line::4} if {_lore} = "&8ᴍᴏɴᴇʏ ᴘᴏᴜᴄʜ"
+		set {_max} to unformatted {_line::5} if {_lore} = "&8ʜᴏɴᴇʏ ᴘᴏᴜᴄʜ"
+		replace all "$", "", ",", "HONEY" in {_max} with ""
+		replace all "$", "", ",", "HONEY" in {_min} with ""
+		set {_max} to {_max} parsed as number
+		set {_min} to {_min} parsed as number
+		remove 1 of player's tool from player
+
+		set {_money} to a random number from {_min} to {_max} if {_lore} = "&8ᴍᴏɴᴇʏ ᴘᴏᴜᴄʜ"
+		set {_money} to a random integer from {_min} to {_max} if {_lore} = "&8ʜᴏɴᴇʏ ᴘᴏᴜᴄʜ"
+		
+		if {_lore} = "&8ᴍᴏɴᴇʏ ᴘᴏᴜᴄʜ":
+			loop 30 times:
+				add 1 to {_}
+				send title "{@success2}$%format(random number from {_min} to {_max})%" to player
+				play sound "block.note_block.hat" to player
+				set {_time} to "%{_} / 2.95% ticks" parsed as timespan
+				wait {_time}
+			play sound "block.note_block.hat" to player
+			send title "{@success2}$%format({_money})%" to player
+			wait 5 ticks
+			play sound "entity.pillager.celebrate" with seed 0
+			add {_money} to player's balance
+			stop
+
+		else if {_lore} = "&8ʜᴏɴᴇʏ ᴘᴏᴜᴄʜ":
+			loop 30 times:
+				add 1 to {_}
+				send title "{@c1}&l%Format(random integer from {_min} to {_max})% HONEY" to player
+				play sound "block.note_block.hat" to player
+				set {_time} to "%{_} / 2% ticks" parsed as timespan
+				wait {_time}
+			play sound "block.note_block.hat" to player
+			send title "{@c1}&l%Format({_money})% HONEY" to player
+			wait 5 ticks
+			play sound "entity.pillager.celebrate" with seed 0
+			add {_money} to player's honey
+			stop
+
+
+on load:
+	wait 3 tick
+	initCrates()
+
+function initCrates():
+	loop {-registerCrate::*}:
+		removeCrate(loop-value)
+	kill all entities where [byte tag "isCrate" of custom nbt of input = 1]
+
+	set {_displayItem} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGY0OTNkZDgwNjUzM2Q5ZDIwZTg0OTUzOTU0MzY1ZjRkMzY5NzA5Y2ViYzlkZGVmMDIyZDFmZDQwZDg2YTY4ZiJ9fX0=")
+	registerCrate("SAND", {_displayItem},location(-310.5, 148, 147.5, world("world")), "#ffec43")
+
+	set {_crate} to "SAND"
+	registerLoot({_crate}, registerMoneyPouch(0, 100), 100)
+	registerLoot({_crate}, registerMoneyPouch(0, 500), 60)
+	registerLoot({_crate}, registerMoneyPouch(0, 1000), 5)
+	registerLoot({_crate}, registerMoneyPouch(0, 10000), 1)
+	registerLoot({_crate}, registerHoneyPouch(0, 15), 1)
+	registerLoot({_crate}, registerHoneyPouch(0, 30), 0.5)
+	registerLoot({_crate}, registerHoneyPouch(0, 60), 0.25)
+	#registerLoot({_crate}, registerTalisman("money", 5), 1)
+	#registerLoot({_crate}, registerTalisman("money", 15), 0.75)
+	#registerLoot({_crate}, registerTalisman("money", 25), 0.5)
+	#registerLoot({_crate}, registerTalisman("money", 35), 0.45)
+	#registerLoot({_crate}, registerTalisman("money", 75), 0.35)
+	#registerLoot({_crate}, registerTalisman("money", 100), 0.25)
+
+	loop {-registerCrate::*}:
+		spawnCrate(loop-value)
+
+on script stop:
+	loop {-registerCrate::*}:
+		removeCrate(loop-value)
+
+function registerCrate(name: string, displayItem: item, loc: location, hexColor: string):
+	set {_ID} to ({_name} in upper snake case)
+
+	set {-registerCrate::%{_ID}%::name} to {_name}
+	set {-registerCrate::%{_ID}%::displayItem} to {_displayItem}
+	set {-registerCrate::%{_ID}%::location} to {_loc}
+	set {-registerCrate::%{_ID}%::hexColor} to {_hexColor}
+
+	add {_ID} to {-registerCrate::*}
+
+function registerLoot(ID: string, item: object, chance: number):
+	set {_item.ID} to ((size of {-crateLootList::%{_ID}%::*}) + 1)
+	add {_item.ID} to {-crateLootList::%{_ID}%::*}
+
+	set {-crateLootList::%{_ID}%::%{_item.ID}%::chance} to {_chance}
+	set {-crateLootList::%{_ID}%::%{_item.ID}%::item} to {_item}
+
+function spawnCrate(ID: string):
+	set {_loc} to {-registerCrate::%{_ID}%::location}
+	spawn item display at {_loc} ~ vector(0, 1.75, 0):
+		set item of entity to {-registerCrate::%{_ID}%::displayItem}
+		set scale of entity to vector(2, 2, 2)
+		set interpolation duration of entity to 1 second
+
+		set byte tag "isCrate" of custom nbt of entity to 1
+		set {-registerCrate::%{_ID}%::entity} to entity
+
+	spawn interaction at {_loc} ~ vector(0, 0.75, 0):
+		make entity responsive
+		set interaction height of entity to 1.15
+		set interaction width of entity to 1.35
+		set {-registerCrate::%{_ID}%::interaction} to entity
+		
+		set string tag "crateType" of custom nbt of entity to "%{_ID}%"
+
+		set byte tag "isCrate" of custom nbt of entity to 1
+		set {-registerCrate::%{_ID}%::interaction} to entity
+
+	spawn text display at {_loc} ~ vector(0, 2.5, 0):
+		set display scale of entity to vector(1.5, 1.5, 1.5)
+		set color of entity to rgb(0, 0, 0, 0)
+		apply text shadow to entity
+		set billboard of entity to center
+
+		set text of entity to "&8&m%" ".repeat(25)%&r", "<%{-registerCrate::%{_ID}%::hexColor}%>%{_ID} in strict proper case%", "&8&m%" ".repeat(25)%&r", "&fᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ" 
+		
+		set byte tag "isCrate" of custom nbt of entity to 1
+		set {-registerCrate::%{_ID}%::text} to entity
+
+	set {_entity} to {-registerCrate::%{_ID}%::entity}
+	while {_entity} is alive:
+		{-registerCrate::%{_ID}%::entity} is alive
+
+		set interpolation delay of {_entity} to 0 ticks
+		rotate {_entity} around its local y axis by 45 degrees
+
+		set {_bobbing} to sin({_} ? 0.0 in degrees) * 0.1
+		set display translation of {_entity} to vector(0, {_bobbing}, 0)
+		add 30 to {_}
+
+		wait 1 second
+	kill {_entity}
+
+function removeCrate(ID: string):
+	kill {-registerCrate::%{_ID}%::entity}, {-registerCrate::%{_ID}%::text}, {-registerCrate::%{_ID}%::interaction}
+
+	clear {-registerCrate::%{_ID}%::*}, {-crateLootList::%{_ID}%::*}
+	remove {_ID} from {-registerCrate::*}
+
+on right click on interaction:
+	set {_rarity} to string tag "crateType" of custom nbt of event-entity
+	{_rarity} is set:
+		play sound "block.barrel.open" with volume 0.25 and pitch 0.75 for player
+		crateGUI(player, {_rarity})
+		stop
+
+function crateGUI(plr: player, ID: string, page: number = 1):
+	set {_UUID} to (uuid of {_plr})
+
+	set {_slots::*} to (integers between 10 and 16), (integers between 19 and 25), (integers between 28 and 34)
+	set {_color} to colored "<%{-registerCrate::%{_ID}%::hexColor}%>"
+
+	set {_pageStart} to ((({_page} * 21) -21) + 1)
+	set {_pageEnd} to ({_page} * 21)
+	set {_maxPage} to floor(((size of {-crateLootList::%{_ID}%::*}) / 21) + 1)
+
+	create a gui with virtual chest inventory with 5 rows named "%{_ID} in strict proper case% Crate":
+
+		make gui (integers between 0 and 44) with gray stained glass pane named "&k" without tooltip
+		make gui {_slots::*} with air
+
+		loop elements from {_pageStart} to {_pageEnd} of {-crateLootList::%{_ID}%::*}:
+			set {_item.ID} to (loop-iteration + {_pageStart} - 1)
+			set {_item} to {-crateLootList::%{_ID}%::%{_item.ID}%::item}
+			set {_chance} to {-crateLootList::%{_ID}%::%{_item.ID}%::chance}
+
+			make gui {_slots::%loop-iteration%} with ({_item} with lore "", " &8■ &fChance: %colored {_color}%%{_chance}%%%  ", ""):
+				play sound "block.note_block.bass" with volume 0.25 and pitch 1 for {_plr}
+
+		set {_key.amount} to {playerKey::%{_UUID}%::%{_ID}%}
+		make gui 40 with ({-registerCrate::%{_ID}%::displayItem} named "%colored {_color}%&lOPEN CRATE" with lore "&8ᴏᴘᴇɴ ᴄʀᴀᴛᴇ", "", " %colored {_color}%&l|&r &fStored: %colored {_color}%x%Format({_key.amount} ? 0)% &fKey", "", " &8◆ &fLeft Click &7to open %{_color}%x1 ", " &8◆ &fShift Left Click &7to open %{_color}%Half", " &8◆ &fRight Click &7to open %{_color}%All ", ""):
+			set {_click.type} to ("%click type%" in upper snake case)
+
+			{_plr}'s inventory cannot hold barrier:
+				send "{@error}Your inventory is full!" to {_plr}
+				play sound "entity.villager.no" with volume 0.25 and pitch 1 for {_plr}
+				exit
+
+			{_click.type} = "LEFT_MOUSE_BUTTON": # x1
+				if {playerKey::%{_UUID}%::%{_ID}%} >= 1:
+					set {_amount} to 1
+					play sound "entity.experience_orb.pickup" with volume 0.25 and pitch 2 for {_plr}
+				else:
+					play sound "entity.villager.no" with volume 0.25 and pitch 1 for {_plr}
+					send "{@error}You don't have enough keys!" to {_plr}
+
+			{_click.type} = "LEFT_MOUSE_BUTTON_WITH_SHIFT": # Half
+				if {playerKey::%{_UUID}%::%{_ID}%} > 1:
+					set {_amount} to floor({playerKey::%{_UUID}%::%{_ID}%} / 2)
+					set {_amount} to {@SINGLE_TIME_OPENABLE_KEY} if {_amount} > {@SINGLE_TIME_OPENABLE_KEY}
+					play sound "entity.experience_orb.pickup" with volume 0.25 and pitch 1 for {_plr}
+				else:
+					play sound "entity.villager.no" with volume 0.25 and pitch 1 for {_plr}
+					send "{@error}You don't have enough keys!" to {_plr}
+
+			{_click.type} = "RIGHT_MOUSE_BUTTON": # All
+				if {playerKey::%{_UUID}%::%{_ID}%} >= 1:
+					set {_amount} to {playerKey::%{_UUID}%::%{_ID}%}
+					play sound "entity.experience_orb.pickup" with volume 0.25 and pitch 0.5 for {_plr}
+				else:
+					play sound "entity.villager.no" with volume 0.25 and pitch 1 for {_plr}
+					send "{@error}You don't have enough keys!" to {_plr}
+
+			{_amount} is set:
+				set {_amount} to {@SINGLE_TIME_OPENABLE_KEY} if {_amount} > {@SINGLE_TIME_OPENABLE_KEY}
+
+				remove {_amount} from {playerKey::%{_UUID}%::%{_ID}%}
+				give {_plr} openCrate({_ID}, {_amount})
+
+			crateGUI({_plr}, {_ID}, {_page})
+
+		# (/!\ DO NOT CHANGE /!\) : Pagination
+		if {_page} <= ({_maxPage} - 1):
+			make gui 41 with tipped arrow of luck with hide additional tooltip item flag named "{@success2}&lNEXT PAGE" with lore "", "&7ᴄʟɪᴄᴋ ᴛᴏ ᴘʀᴏᴄᴇᴇᴅ":
+				play sound "ui.button.click" with volume 0.25 and pitch 1 for {_plr}
+				crateGUI({_plr}, {_ID}, ({_page} + 1))
+		else:
+			make gui 41 with black stained glass pane named "&k" without tooltip
+		if {_page} != 1:
+			make gui 39 with tipped arrow of healing with hide additional tooltip item flag named "{@error2}&lPREVIOUS PAGE" with lore "", "&7ᴄʟɪᴄᴋ ᴛᴏ ᴘʀᴏᴄᴇᴇᴅ":
+				play sound "ui.button.click" with volume 0.25 and pitch 1 for {_plr}
+				crateGUI({_plr}, {_ID}, ({_page} - 1))
+		else:
+			make gui 39 with black stained glass pane named "&k" without tooltip
+
+	open last gui to {_plr}
+
+function openCrate(ID: string, amount: integer) :: items:
+	set {_lootSize} to size of {-crateLootList::%{_ID}%::*}
+
+	loop {_lootSize} times:
+		set {_rewardID} to loop-iteration
+		exit loop if {-crateLootList::%{_ID}%::%{_rewardID}%::item} is not set
+		add {-crateLootList::%{_ID}%::%{_rewardID}%::chance} to {_totalWeight}
+
+	loop {_amount} times:
+		set {_winID} to 1
+		set {_roll} to (random number between 0 and {_totalWeight})
+
+		loop {_lootSize} times:
+			set {_rewardID} to loop-iteration-2
+			exit loop if {-crateLootList::%{_ID}%::%{_rewardID}%::item} is not set
+			remove {-crateLootList::%{_ID}%::%{_rewardID}%::chance} from {_roll}
+			if {_roll} <= 0:
+				set {_winID} to {_rewardID}
+				exit loop
+
+		add 1 to {_winCount::%{_winID}%}
+
+	loop {-crateLootList::%{_ID}%::*}:
+		set {_rewardID} to loop-iteration
+		set {_count} to {_winCount::%{_rewardID}%} ? 0
+		if {_count} > 0:
+			loop {_count} times:
+				add {-crateLootList::%{_ID}%::%{_rewardID}%::item} to {_rewards::*}
+
+	return {_rewards::*}
+
+# ////////////////////////////////////////////
+# ////////////////////////////////////////////
+# ////////////////////////////////////////////
+
+command /keyall [<string>] [<number>]:
+	description: Give a all players keys.
+	permission: op
+	permission message: {@error}You don't have permission!
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/keyall <id> <number>
+	cooldown: 20 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if any:
+			arg-1 isn't set
+			arg-2 isn't set
+		then:
+			send usage to player
+			stop
+
+		set {_ID} to arg-1 in upper snake case
+
+		if {-registerCrate::*} doesn't contain {_ID}:
+			send "{@error}Invalid ID: &f%{_ID}%{@error2}!" to player
+			stop
+		
+		send colored "{@success2}You gave &f%Format(arg-2)%x %{_ID} in strict proper case% Key {@success2}to &fall players{@success2}." to player
+		loop all players:
+			set {_p} to loop-player
+			add arg-2 to {playerKey::%{_p}'s uuid%::%{_ID}%}
+			send colored "{@prefix}You received {@success2}%Format(arg-2)%x %{_ID} in strict proper case% Key&f." to {_p} if {_p} is online
+
+command /givekey [<offline player>] [<string>] [<number>]:
+	description: Give a player keys.
+	permission: op
+	permission message: {@error}You don't have permission!
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/givekey <player> <id> <number>
+	cooldown: 20 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if any:
+			arg-1 isn't set
+			arg-2 isn't set
+			arg-3 isn't set
+		then:
+			send usage to player
+			stop
+
+		set {_ID} to arg-2 in upper snake case
+
+		if {-registerCrate::*} doesn't contain {_ID}:
+			send "{@error}Invalid ID: &f%{_ID}%{@error2}!" to player
+			stop
+
+		add arg-3 to {playerKey::%arg-1's uuid%::%{_ID}%}
+		send colored "{@success2}You gave &f%Format(arg-3)%x %{_ID} in strict proper case% Key {@success2}to &f%arg-1%{@success2}." to player
+		send colored "{@prefix}You received {@success2}%Format(arg-3)%x %{_ID} in strict proper case% Key&f." to arg-1 if arg-1 is online
+
+on tab complete of "givekey":
+	set tab completion for position 1 to all players
+	set tab completion for position 2 to {-registerCrate::*}
+	set tab completion for position 3 to 5, 500, 1000
+
+on tab complete of "keyall":
+	set tab completion for position 1 to {-registerCrate::*}
+	set tab completion for position 2 to 5, 500, 1000

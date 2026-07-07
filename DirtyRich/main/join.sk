@@ -1,0 +1,157 @@
+import:
+	java.awt.Color
+	java.net.URL
+	javax.imageio.ImageIO
+	de.oliver.fancynpcs.api.FancyNpcsPlugin
+
+options:
+	minehut staff: "Zoetz", "claruxa_", "jamieisthebest", "Puremin0rez", "TacoJusta", "ItsKieran", "Léo", "pop4959", "_Star", "Owen1212055", "nkr", "Santio71", "Alez0neZ", "_Tarna_", "DuckyProgrammer", "rosabel", "Reassembly", "Mwuhh", "GreyHashira", "dragonet64", "Pryzmm", "DDbrother", "SolarStephen", "TyladTheNerd", "Alledge", "Evelyn344", "Thweep", "403Denied", "lilminy", "Splaterd", "TheFluffyOneJava", "DjDisaster", "yepshu", "revqz", "Hannaan7real", "Openmindedness"
+
+
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	server: <##FFFF28>&lD<##FFFF3B>&lI<##FFFF4E>&lR<##FFFF61>&lT<##FFFF74>&lY<##FFFF61>&lR<##FFFF4E>&lI<##FFFF3B>&lC<##FFFF28>&lH
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+
+on join:
+	set server brand to "Dirty Rich" for player
+	set {_h} to a random integer from 0 to 360
+	if player hasn't played before:
+		set the join message to formatted "<##e941ff>&lNEW &f%player's prefix% <#%hsvToHex({_h}, 28, 100)%>%player%"
+		play sound "block.beacon.activate" with pitch 2 to all players where [input isn't player]
+		if chance of 25%:
+			wait 5 tick
+			send "{@success2}TIP: &fWelcome new players for {@c1}&lHONEY" to all players where [input isn't player]
+
+		if "%player%" = "SkriptIsHot":
+			console command "lp user %player% parent set minehut"
+			send "{@prefix}WELCOME {@c1}&l%player%&f!" to player
+			send "{@prefix}You were granted the {@c1}&lMINEHUT&f rank." to player
+			send "" to player
+			send "{@prefix}Skript &f&l&nIS&r &fhot." to player
+
+
+		if "%player%" = {@minehut staff} or "Minehut":
+			console command "lp user %player% parent set minehut"
+			send "{@prefix}WELCOME {@c1}&l%player%&f!" to player
+			send "{@prefix}You were granted the {@c1}&lMINEHUT&f rank." to player
+	else:
+		set {_msg} to formatted "%player's prefix% <#%hsvToHex({_h}, 28, 100)%>%player%"
+		set the join message to "&7[<##28b0ff>+&7] %{_msg}%"
+
+	apply infinite night vision 255 to player:
+		hide particles
+		hide icon
+
+	run section {-func::getPlayerHead} async with player and store result in {_head::*} and wait
+
+	set {_welcome} to minimessage from "<gradient:%hsvToHex({_h}, 50, 100)%:%hsvToHex({_h}, 28, 100)%:%hsvToHex({_h}, 50, 100)%><b>WELCOME"
+
+	set {_head::0}, {_head::9} to minimessage from "<gradient:#555555:#AAAAAA:#555555><st>" + " ".repeat(60) + "</st></gradient>"
+	add "&r %{_welcome}%" to {_head::1}
+	add "&r " to {_head::2}
+	add "&r " to {_head::3}
+	add "&r &8● <##28ABFF>&l/D<##42B5FF>&lI<##5CBFFF>&lS<##76C9FF>&lC<##5CBFFF>&lO<##42B5FF>&lR<##28ABFF>&lD" to {_head::4}
+	add "&r &8● <##3EC228>&l/S<##67D14F>&lT<##90E076>&lO<##67D14F>&lR<##3EC228>&lE" to {_head::5}
+	add "&r " to {_head::6}
+	add "&r " to {_head::7}
+	add "&r " to {_head::8}
+
+	send {_head::*} to player
+
+	wait 5 ticks
+
+	run section {-func::loadNpcs} async with player
+
+	if "%player's client brand%" partially matches "(?i).*wurst.*", "(?i).*impact.*", "(?i).*aristois.*", "(?i).*future.*", "(?i).*meteor.*", "(?i).*inertia.*", "(?i).*sigma.*" or "(?i).*liquidbounce.*":
+		console command "staff ban %player% [DIRTY CHEAT] Hacked client detected."
+		send "%nl%&7[{@error2}DIRTY CHEAT&7] &fA player was banned for using a hacked client." to all players
+
+	if "%player's client brand%" partially matches "(?i).*wurst.*", "(?i).*impact.*", "(?i).*aristois.*", "(?i).*future.*", "(?i).*meteor.*", "(?i).*inertia.*", "(?i).*sigma.*" or "(?i).*liquidbounce.*":
+		set {_brand} to "{@error2}%player's client brand%"
+
+	else if "%player's client brand%" partially matches "^Geyser$", "^vanilla$", "^fabric$", "^quilt$", "^lunarclient:v\\d+\\.\\d+\\.\\d+-\\d{4},(?:fabric|forge)$", "^Feather Fabric$" or "^labymod$":
+		set {_brand} to "{@success2}%player's client brand%"
+	
+	else:
+		set {_brand} to "{@c2}%player's client brand%"
+
+	send "&7[{@error2}ALERT&7] &f%player% &7joined with &f%{_brand}%" to all players where [input has permission "staff"]
+
+on load:
+	create section with {_player} stored in {-func::getPlayerHead}:
+		if "%{_player}%" starts with ".":
+			set {_player} to "Ayxiom"
+		loop ...ImageIO.read(new URL("https://minotar.net/helm/%{_player}%/8.png")).getRGB(0, 0, 8, 8, null, 0, 8):
+			set {_color} to new Color(loop-value, true)
+
+			set {_hex} to "#" + hex code of rgb({_color}.getRed(), {_color}.getGreen(), {_color}.getBlue())
+			set {_head::%ceil((loop-iteration) / 8)%} to join {_head::%ceil((loop-iteration) / 8)%}, colored "<%{_hex}%>█"
+		return {_head::*}
+
+	create section with {_player} stored in {-func::loadNpcs}:
+		if "%{_player}%" doesn't start with ".":
+			FancyNpcsPlugin.get().getNpcManager().getNpc("topHoneyBalance").remove({_player})
+			FancyNpcsPlugin.get().getNpcManager().getNpc("topHoneyBalance").spawn({_player})
+
+			FancyNpcsPlugin.get().getNpcManager().getNpc("store").remove({_player})
+			FancyNpcsPlugin.get().getNpcManager().getNpc("store").spawn({_player})
+				
+
+on quit:
+	set the quit message to ""
+
+local function toHexDigit(n: number) :: string:
+	if {_n} = 10: 
+		return "A"
+	if {_n} = 11: 
+		return "B"
+	if {_n} = 12: 
+		return "C"
+	if {_n} = 13: 
+		return "D"
+	if {_n} = 14: 
+		return "E"
+	if {_n} = 15: 
+		return "F"
+	return "%{_n}%"
+
+local function toHexChannel(n: number) :: string:
+	set {_high} to floor({_n} / 16)
+	set {_low} to mod({_n}, 16)
+	return "%toHexDigit({_high})%%toHexDigit({_low})%"
+
+local function rgbToHex(r: number, g: number, b: number) :: string:
+	return "#%toHexChannel({_r})%%toHexChannel({_g})%%toHexChannel({_b})%"
+
+local function hsvToHex(h: number, s: number, v: number) :: string:
+	set {_s} to {_s} / 100
+	set {_v} to {_v} / 100
+
+	set {_hi} to mod(floor({_h} / 60),6)
+	set {_f} to {_h} / 60 - floor({_h} / 60)
+
+	set {_p} to floor({_v} * (1 - {_s}) * 255)
+	set {_q} to floor({_v} * (1 - {_f} * {_s}) * 255)
+	set {_t} to floor({_v} * (1 - (1 - {_f}) * {_s}) * 255)
+	set {_v2} to floor({_v} * 255)
+
+	if {_hi} = 0:
+		return rgbToHex({_v2}, {_t}, {_p})
+	if {_hi} = 1:
+		return rgbToHex({_q}, {_v2}, {_p})
+	if {_hi} = 2:
+		return rgbToHex({_p}, {_v2}, {_t})
+	if {_hi} = 3:
+		return rgbToHex({_p}, {_q}, {_v2})
+	if {_hi} = 4:
+		return rgbToHex({_t}, {_p}, {_v2})
+	return rgbToHex({_v2}, {_p}, {_q})

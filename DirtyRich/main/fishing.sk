@@ -1,0 +1,491 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+	col-common: <##d8d8d8>
+	col-uncommon: <##7bff7b>
+	col-rare: <##82a9ff>
+	col-epic: <##ff94ff>
+	col-legendary: <##ffd04f>
+	col-mythic: <##ff6f6f>
+
+	max-luck: 50
+	max-speed: 50
+	max-greed: 50
+
+on load:
+	fish_initRarities()
+	fish_initFish()
+
+
+function fish_initRarities():
+	#               id           display   weight  mult  minKg  maxKg   color
+	addFishRarity("common",    "COMMON",    600,  1.0,   0.1,   2.0,  "{@col-common}")
+	addFishRarity("uncommon",  "UNCOMMON",  250,  2.2,   0.5,   6.0,  "{@col-uncommon}")
+	addFishRarity("rare",      "RARE",      100,  6.0,   1.5,  15.0,  "{@col-rare}")
+	addFishRarity("epic",      "EPIC",       40, 16.0,   4.0,  30.0,  "{@col-epic}")
+	addFishRarity("legendary", "LEGENDARY",   8, 45.0,  10.0,  65.0,  "{@col-legendary}")
+	addFishRarity("mythic",    "MYTHIC",      2, 130.0, 20.0, 110.0,  "{@col-mythic}")
+
+function fish_initFish():
+	clear {fish::data::*}
+	# COMMON
+	set {_salmon} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTMwZGU5MTQwOTY4NWZjZmU2OWM5Mzk3YmZkNzFmYWY0ZTBjY2ZlYTBiMTk1NDAyZjEzNGY1OTUyN2MwMjM4NCJ9fX0=")
+	set {_pufferfish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmRmOGMzMTY5NjI5NDliYTNiZTQ0NWM5NGViZjcxNDEwODI1MmQ0NjQ1OWI2NjExMGY0YmMxNGUwZTFiNTlkYyJ9fX0=")
+	set {_plastic} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjFmNmMxZDFjNTMyNWI5MDE3MDNiMTdjYjZkZmU0ZjcyMWQ2NzQxOThlNDY0MzYwNjVjOTkyYzM3MTNhOWE2OCJ9fX0=")
+	addFish("Plastic", {_plastic}, "common", 1)
+	addFish("Plastic", {_plastic}, "common", 1)
+	addFish("Plastic", {_plastic}, "common", 1)
+	addFish("Plastic", {_plastic}, "common", 1)
+	addFish("Salmon", {_salmon}, "common", 5)
+	addFish("Pufferfish", {_pufferfish}, "common", 15)
+
+	# UNCOMMON
+	set {_f} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGJlY2U4MDE5MjVhNmE1NzU1NmVmMDQzNTgyMjYxMjI2YTljOGJiNWE4MzRhNTI0ZGFkMDBmZWU3ZjMzOTViMSJ9fX0=")
+	set {_ILovedYouAsASmallKid} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDc5MTBlNDQxNmIyZjIwNjViZDhjZmM5YTNlZTAwYWM5ZGE4MjlkMDc5OWRmZmFkYzA3ZGQzYjZjMWFjYjViNyJ9fX0=")
+	set {_happy} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTQ2MmYxOTg0OGQ4NTMzYmRlNzE3YzM5ODJiZmEwYjhkYWJkYjZiOTljNTMyY2Y2YzhiODVkYjM0NTU1YzMxZCJ9fX0=")
+	set {_bait} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGJiY2RkZDQ1Y2QzNDc4NjViY2VhYjNlM2RjNWQzODI3MjM0NjM5NjNmODVlY2NlODFjZGQ2MWI1M2RiMTRlNCJ9fX0=")
+	set {_hotbait} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjEzYzY4OTlkOTcxMDljNmNhY2JiY2RkMDFlODkwMGFiYWY0NjQzMmYxOTc1OTViYWExNWFkMTM3ZDVmYjliYSJ9fX0=")
+	addFish("Fish Monster", {_f}, "uncommon", 45)
+	addFish("Happy Fish", {_happy}, "uncommon", 55)
+	addFish("Corrupted Bait", {_bait}, "uncommon", 65)
+	addFish("Hot Bait", {_hotbait}, "uncommon", 65)
+	addFish("Darwin", {_ILovedYouAsASmallKid}, "uncommon", 100)
+
+	# RARE
+	set {_pufferfish2} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODI0YTBmNTdmNWUwZTc1ZmJjNGY0NzE0MGYwNzZlMDJhMWUxN2UyMTQ1Y2E4MmNmNjQ5ZmFmOTBjZjBmZDk4MiJ9fX0=")
+	set {_carrotfish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzQ3YzYzZmYwZjQxYTUzMWU2MDgxZmM2NTg4MDQ3MDY5OWMxZGFhM2E0NzFhYzUxNGY0NTM0YzVlM2Y0YjVkZCJ9fX0=")
+	set {_pineapplefish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNzQ0NDFhMGIxMjBjZjI2MWJjYmRhNjAyMGIxYjMwMjFiODlmZmQ1YzJlYzE4ODczODg0NGFjMjZkOWUzZGQ0ZCJ9fX0=")
+	set {_grapefish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTcwZDMxYzY1NTAxNDYxNTFiNTkxMjg5M2IzNjgzMWE0Nzg3ZTVkMWIwMGUyM2NiZjEzOGZiZDYxNjcxZWRkYiJ9fX0=") 
+	set {_cherryfish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjc0OThmODBkZmY5YjdlMmZmMzNkNGQwNzQyNzVhOGY5MTYyYWVlMTA3ZTNmMzM5ZjYyMDUyNjhjMTBlMzJkMiJ9fX0=")
+	set {_wheatfish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWY1ODM1YzliZWQ5Yzc0MjAwNzhlNDViYjE0YzkzZDViM2ZkOGIzMWRjYjljODdmMzlhZDU1NDI5YTcyNmQyOSJ9fX0=")
+	set {_monsterstevefish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzhjYzhiM2IxNmRmZmRhMTZiZWEzNmUxZWY0OTBmY2QwNzc4ZTE2YTE1NTMxNjAzZGM3ZDdlMDI0MzI4ZWYzNyJ9fX0=")
+	addFish("Two-Headed Pufferfish", {_pufferfish2}, "rare", 300)
+	addFish("Carrot Fish", {_carrotfish}, "rare", 380)
+	addFish("Pineapple", {_pineapplefish}, "rare", 430)
+	addFish("Grape Fish", {_grapefish}, "rare", 500)
+	addFish("Cherry Fish", {_cherryfish}, "rare", 550)
+	addFish("Wheat Fish", {_wheatfish}, "rare", 590)
+	addFish("Monster Steve Fish", {_monsterstevefish}, "rare", 600)
+
+	# EPIC
+	set {_madfish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNWQ4Yjg2NWY4ZjE1NGY3Mzg5NGMyNTgzZGY1N2UxNGJiYzdiYTgwZjU4YjM5OTJlYmIxNmI1MTU1ZTAzNzY2MSJ9fX0=")
+	set {_sculkfish} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGIwMGVlODAzYmNhODI5ODgwN2FkZDFjZGY4ZTQwMzkwMDU2ZDliYzI3MmIyOWIzZGY2NWYzYjMxY2I5OTY0YSJ9fX0=")
+	set {_alienpiranha} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmRlMTViMzI3MmVmM2FmZDVkMWE3OTU1M2NjMzYzNWUwMzlmOWM1OGNkMjA1NmYzOGIxNTVlNDBmYTBjM2U3YSJ9fX0=")
+	set {_steve} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvM2YyNjVhMjdmMTE3YTNkYzRiZjViN2NhMzlmZDlkOWRhOWJkMzI3ZjZjYTZiZThhNTcyNTQwMmMxMGE0ZmFlMiJ9fX0=")
+	set {_piranha} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjRjNDY2NGMyNDRlODUwZjcxZTA0MGVkMDk4YTViODE0ZGQ3ODIyOTZjYzIwNzBkMWU1NzlkMWMzYjBkMmEzMSJ9fX0=")
+	set {_pufferfishbee} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWQ1N2RlODdlZjhhMTcxNmIwYWJiZTAxMzU5YTI3YWVhODUxMmZjNTdjMWFhZTcwZGVlNWUxNWY2ZDFmOWRmZCJ9fX0=")
+	addFish("Mad Fish", {_madfish}, "epic", 2000)
+	addFish("Sculk Fish", {_sculkfish}, "epic", 2200)
+	addFish("Piranha", {_piranha}, "epic", 2300)
+	addFish("Alien Piranha", {_alienpiranha}, "epic", 2500)
+	addFish("Real Pufferfish", {_steve}, "epic", 2900)
+	addFish("Pufferfish Bee", {_pufferfishbee}, "epic", 3500)
+
+	# LEGENDARY
+	set {_nemo} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmIwZWQ4ZmRhODBiY2RmZThkMWY5N2IxMzg5MGQ2MWFkODVlZDRkOTI1OGFjOTY4N2Q4NTg1MjAyY2M0ZDBhMSJ9fX0=")
+	set {_codking} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzczYTEzMGI1MTg3YzEwZWNiNWYxMmVlNzQ1NmE5YzQxZTI5MWU2NTI1MTI1YmE1ODM0MGEzODhmNzUxOTBkYSJ9fX0=")
+	set {_fishbutidkwhat} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjQzODJmYzhiZDM1OTlmNjY5YWVhNGE0NzU5YjgwODNjMjE5ZWYxNTllNTZjMjk3YTFhMzQ2MWZiMGNjY2JjZCJ9fX0=")
+	set {_1738} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDVlMzk1MWVmM2QzNGE0YmEyYzU3MjcwYjRlNWQ5OTU3OTJiNmZiM2EwNTA0YTg1YThiN2MwMWMzY2RhZDg2In19fQ==")
+	set {_17382} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZTQ3NmE3YzViYzdjZjg4NDVmMzJkM2NkZDQ3MjdhNzQ4ZjY0MmVlMTY2MjE1ZDRiZDYxNDc5YzY1OGNiODA5MiJ9fX0=")
+	set {_17383} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYTBjOTA3NjMzN2UwNWFkMDU0NTAxZWJlNDE4MmYxMDEzNGZmM2EwZGM1NGQxMTI3MGZlMTgzMzUzMjVjNjA1YyJ9fX0=")
+	addFish("Nemo", {_nemo}, "legendary", 20000)
+	addFish("Cod King", {_codking}, "legendary", 23511)
+	addFish("Fish?", {_fishbutidkwhat}, "legendary", 27500)
+	addFish("1927 Salmon", {_1738}, "legendary", 30500)
+	addFish("1927 Pufferfish", {_17382}, "legendary", 35500)
+	addFish("1927 Cod", {_17383}, "legendary", 42000)
+
+	# MYTHIC
+	set {_myThicc} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDEzYmEyY2E4ZjUzYjE1NmFlMTBkOGU2MDIzYTdmMGVlYTQxOGJiZWRlYzViNjMxOWQ5NDQ4ZTMzNDZmMjZmZSJ9fX0=")
+	set {_myThicc2} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNGQzZGY5YmEzNjFiNGI0N2RlY2I5NGIxMmU5NmViMTMxZjIwOWRlNzgwYTE0NTRiMzdkYmZjY2ZhZjI5MWFkOSJ9fX0=")
+	set {_myThicc3} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGY2MjhlNTkwZTBiMzkwMjJkM2VmMDQ2OTY0ZTQ0MTJmMWI2NjMzZjFmMTQyYzU4YWI0MTZmMTEyZTFkNjE1NCJ9fX0=")
+	set {_myThicc4} to getHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvODE1YTBkZmVkOWJlYjI5NGYyNGRmY2EyYzY1ZjI4MTQ2ODgwZWYwMjlmYjgwNGY2MmRhZTJiMGRhZTk5NzcwMyJ9fX0=")
+	addFish("Fish in Aquarium", {_myThicc}, "mythic",  150000)
+	addFish("Fishbowl", {_myThicc2}, "mythic",  175321)
+	addFish("Hungry Pufferfish", {_myThicc3}, "mythic",  200000)
+	addFish("McDonalds Pufferfish", {_myThicc4}, "mythic",  245000)
+
+function addFishRarity(id: string, name: string, catchWeight: number, valueMult: number, minKg: number, maxKg: number, color: string):
+	add {_id} to {fish::rarities::*}
+	set {fish::rarity::%{_id}%::name} to {_name}
+	set {fish::rarity::%{_id}%::catchWeight} to {_catchWeight}
+	set {fish::rarity::%{_id}%::valueMult} to {_valueMult}
+	set {fish::rarity::%{_id}%::minKg} to {_minKg}
+	set {fish::rarity::%{_id}%::maxKg} to {_maxKg}
+	set {fish::rarity::%{_id}%::color} to {_color}
+
+function addFish(name: string, item: item, rarity: string, basePrice: number):
+	
+	set {_id} to "%{_name}%" in lower case
+	replace all " " with "_" in {_id}
+	replace all "'" with ""  in {_id}
+
+	add {_id} to {fish::registry::*}
+	add {_id} to {fish::byRarity::%{_rarity}%::*}
+
+	set {fish::data::%{_id}%::name}      to {_name}
+	set {fish::data::%{_id}%::item}      to {_item}
+	set {fish::data::%{_id}%::rarity}    to {_rarity}
+	set {fish::data::%{_id}%::basePrice} to {_basePrice}
+
+
+function getRod(p: player):: item:
+	set {_rod} to fishing rod
+	set item flags of {_rod} to hide enchants, hide attributes, hide unbreakable, hide breakable blocks
+	set {_rod} to unbreakable {_rod}
+
+	clear {_lines::*}
+
+	set {_lines::1} to mini message from "<!italic><dark_gray>ᴛᴏᴏʟ"
+	set {_lines::2} to mini message from "<!italic>"
+	set {_lines::3} to mini message from "<!italic>{@c1}<b>UPGRADES"
+	set {_lines::4} to mini message from "<!italic>"
+
+	set {_} to 4
+
+	set {_luck}  to fish_getStat({_p}, "luck")
+	set {_speed} to fish_getStat({_p}, "speed")
+	set {_greed} to fish_getStat({_p}, "greed")
+
+	add 1 to {_}
+	set {_lvl} to {_luck}
+	set {_maxLvl} to {@max-luck}
+	set {_icon} to raw "<sprite:gui:mob_effect/luck>"
+	if {_lvl} = {_maxLvl}:
+		set {_line} to raw "<!italic> <white>%{_icon}% <#92ff60>Luck <gray>[<#ffff28><b>%{_lvl}%<reset><!italic><gray>]"
+	else:
+		set {_line} to raw "<!italic> <white>%{_icon}% <#92ff60>Luck <gray>[<white><b>%{_lvl}%<reset><!italic><gray>]"
+
+	set {_lines::%{_}%} to mini message from raw {_line}
+
+	add 1 to {_}
+	set {_lvl} to {_greed}
+	set {_maxLvl} to {@max-greed}
+	set {_icon} to raw "<sprite:gui:mob_effect/hero_of_the_village>"
+	if {_lvl} = {_maxLvl}:
+		set {_line} to raw "<!italic> <white>%{_icon}% <#92ff60>Greed <gray>[<#ffff28><b>%{_lvl}%<reset><!italic><gray>]"
+	else:
+		set {_line} to raw "<!italic> <white>%{_icon}% <#92ff60>Greed <gray>[<white><b>%{_lvl}%<reset><!italic><gray>]"
+
+	set {_lines::%{_}%} to mini message from raw {_line}
+
+	add 1 to {_}
+	set {_lvl} to {_speed}
+	set {_maxLvl} to {@max-speed}
+	set {_icon} to raw "<sprite:gui:mob_effect/speed>"
+	if {_lvl} = {_maxLvl}:
+		set {_line} to raw "<!italic> <white>%{_icon}% <#92ff60>Speed <gray>[<#ffff28><b>%{_lvl}%<reset><!italic><gray>]"
+	else:
+		set {_line} to raw "<!italic> <white>%{_icon}% <#92ff60>Speed <gray>[<white><b>%{_lvl}%<reset><!italic><gray>]"
+
+	set {_lines::%{_}%} to mini message from raw {_line}
+
+	add 1 to {_}
+	set {_lines::%{_}%} to mini message from "<!italic>"
+
+	add 1 to {_}
+	set {_lines::%{_}%} to mini message from "<!italic><gray>ʀɪɢʜᴛ-ᴄʟɪᴄᴋ ᴛᴏ ᴜᴘɢʀᴀᴅᴇ"
+
+	set {_lvl} to {_luck} + {_speed} + {_greed}
+	set component lore of {_rod} to {_lines::*}
+	set name of {_rod} to "{@c1}&lFISHING ROD &r&7[{@c2}%{_lvl}%&7]"
+
+	set {_lureEnch} to "lure %floor(fish_getStat({_p}, "speed") / 2)%" parsed as enchantment type
+	enchant {_rod} with {_lureEnch}
+	make {_rod} stop glinting
+
+	return {_rod}
+
+function isRod(i: item):: boolean:
+	return true if type of {_i} = fishing rod
+	return false
+
+function fish_getStat(p: player, key: string):: number:
+	set {_v} to {rod::%{_p}'s uuid%::%{_key}%}
+	return 0 if "%{_v}%" = "<none>"
+	return {_v}
+
+function fish_setStat(p: player, key: string, val: number):
+	set {rod::%{_p}'s uuid%::%{_key}%} to {_val}
+
+on right click:
+	player is sneaking
+	if isRod(player's tool) = true:
+		cancel event
+		fish_openRodGUI(player)
+		stop
+
+on fishing state change:
+	if fish state = caught fish:
+		cancel event
+		kill fish hook
+		fish_catch(player)
+	if fishing caught entity is a player:
+		cancel event
+		kill fish hook
+
+function fish_catch(p: player):
+	set {_greed} to fish_getStat({_p}, "greed")
+	set {_luck}  to fish_getStat({_p}, "luck")
+
+	set {_bonusMult} to 1.0
+	set {_bonusTag}  to ""
+
+	if chance of 1.5%:
+		set {_bonusMult} to a random number from 1.5 to 4.5
+		set {_bonusTag}  to "treasure"
+		play sound "block.chest.open" with volume 0.9 with pitch 1.35 to {_p}
+
+	if chance of 0.04%:
+		set {_jackpot}   to a random integer from 45 to 90
+		set {_bonusMult} to {_bonusMult} * {_jackpot}
+		set {_bonusTag}  to "jackpot"
+		set {_seeds::*}  to 0, 1, 4
+		play sound "entity.pillager.celebrate" with seed (a random element out of {_seeds::*}) with volume 0.9 with pitch 1.8 to {_p}
+
+	set {_rarity} to fish_rollRarity({_luck})
+
+	set {_pool::*} to {fish::byRarity::%{_rarity}%::*}
+	set {_fishId}  to a random element out of {_pool::*}
+
+	if "%{_fishId}%" = "<none>":
+		set {_fishId} to a random element out of {fish::byRarity::common::*}
+
+	set {_weight} to fish_genWeight({_rarity})
+	set {_value} to floor(fish_calcValue({_fishId}, {_rarity}, {_weight}, {_greed}) * ({_bonusMult} * getPrestigeMultiplier({_p})) * 100) / 100.0
+	set {_item} to fish_buildItem({_fishId}, {_rarity}, {_weight}, {_value})
+
+	set {_col}  to {fish::rarity::%{_rarity}%::color}
+	set {_name} to {fish::data::%{_fishId}%::name}
+
+	send actionbar "{@success2}+1 %{_col}%&l%{_name}% &r&8| {@c1}%{_weight}%kg &r&8| {@success2}$%format({_value})%" to {_p}
+
+	if {_bonusTag} = "treasure":
+		send "{@c1}&lTREASURE! &7+%floor({_bonusMult} * 10) / 10.0%x value on your catch!" to {_p}
+	else if {_bonusTag} = "jackpot":
+		send "{@c1}&lJACKPOT! &7+%{_jackpot}%x &7— {@success2}$%format({_value})%!" to {_p}
+
+	if {_rarity} = "mythic":
+		play sound "ui.toast.challenge_complete" with volume 1 with pitch 0.7 to {_p}
+	else if {_rarity} = "legendary":
+		send "{@col-legendary}&l[LEGENDARY] &f%{_name}% — %{_weight}%kg — {@success2}$%format({_value})%" to {_p}
+		play sound "ui.toast.challenge_complete" with volume 0.8 with pitch 1.0 to {_p}
+	else if {_rarity} = "epic":
+		play sound "entity.player.levelup" with volume 0.6 with pitch 1.3 to {_p}
+	else:
+		play sound "entity.experience_orb.pickup" with volume 0.05 with pitch 2 to {_p}
+
+	fish_trackStat({_p}, "caught", 1)
+	fish_trackRarityStat({_p}, {_rarity})
+	if {_weight} > {fish::stats::%{_p}'s uuid%::best_weight}:
+		set {fish::stats::%{_p}'s uuid%::best_weight} to {_weight}
+		set {fish::stats::%{_p}'s uuid%::best_fish} to {_name}
+		set {fish::stats::%{_p}'s uuid%::best_rarity} to {_rarity}
+
+	give {_item} to {_p}
+
+function fish_rollRarity(luck: number) :: string:
+    set {_t} to min(1.0, max(0.0, (max(0, {_luck} - 35)) / {@max-luck}))
+
+    set {_adj::common}    to max(0.0, {fish::rarity::common::catchWeight}    * (1.0 - {_t}))
+    set {_adj::uncommon}  to max(0.0, {fish::rarity::uncommon::catchWeight}  * (1.0 - {_t}))
+
+    set {_adj::rare}      to {fish::rarity::rare::catchWeight}      * (1.0 + {_t} * 2.0)
+    set {_adj::epic}      to {fish::rarity::epic::catchWeight}      * (1.0 + {_t} * 4.0)
+    set {_adj::legendary} to {fish::rarity::legendary::catchWeight} * (1.0 + {_t} * 7.0)
+    set {_adj::mythic}    to {fish::rarity::mythic::catchWeight}    * (1.0 + {_t} * 11.0)
+
+    set {_total} to 0
+    loop {fish::rarities::*}:
+        add {_adj::%loop-value%} to {_total}
+
+    set {_roll} to a random number from 0 to {_total}
+    set {_cum} to 0
+
+    loop {fish::rarities::*}:
+        add {_adj::%loop-value%} to {_cum}
+        return loop-value if {_roll} <= {_cum}
+
+    return "common"
+
+function fish_genWeight(rarity: string):: number:
+	set {_min} to {fish::rarity::%{_rarity}%::minKg}
+	set {_max} to {fish::rarity::%{_rarity}%::maxKg}
+	set {_mid} to ({_min} + {_max}) / 2.0
+
+	set {_base} to a random number from {_min} to {_mid}
+
+	if chance of 25%:
+		set {_base} to a random number from {_min} to {_max}
+	if chance of 8%:
+		set {_base} to a random number from {_mid} to {_max}
+	if chance of 1%:
+		set {_base} to {_max} * (a random number from 0.88 to 1.0)
+
+	return floor({_base} * 10) / 10.0
+
+function fish_calcValue(fishId: string, rarity: string, weight: number, greedLvl: number):: number:
+	set {_base}      to {fish::data::%{_fishId}%::basePrice}
+	set {_rarMult}   to {fish::rarity::%{_rarity}%::valueMult}
+
+	set {_minKg}     to {fish::rarity::%{_rarity}%::minKg}
+	set {_maxKg}     to {fish::rarity::%{_rarity}%::maxKg}
+	set {_range}     to max(0.1, {_maxKg} - {_minKg})
+	set {_weightMult} to 1.0 + (({_weight} - {_minKg}) / {_range}) * 0.60
+
+	set {_greedMult} to 1.0 + ({_greedLvl} / {@max-greed}) * 2.0
+
+	return {_base} * {_rarMult} * {_weightMult} * {_greedMult}
+
+
+function fish_buildItem(fishId: string, rarity: string, weight: number, value: number):: item:
+	set {_name} to {fish::data::%{_fishId}%::name}
+	set {_icon} to {fish::data::%{_fishId}%::item}
+	set {_col} to {fish::rarity::%{_rarity}%::color}
+	set {_rarName} to {fish::rarity::%{_rarity}%::name}
+
+	set {_item} to {_icon}
+	set item flags of {_item} to hide enchants, hide attributes
+	set name of {_item} to "%{_col}%&l%{_name}%"
+	set lore of {_item} to "&8ꜰɪꜱʜ", "", "%{_col}%&l%{_rarName}%", "&7Weight: {@c2}%{_weight}%kg", "&7Value:  {@success2}$%format({_value})%", ""
+
+	modify custom nbt of {_item}:
+		set string tag "id" of nbt to "%{_fishId}%"
+		set string tag "rarity" of nbt to "%{_rarity}%"
+		set string tag "weight" of nbt to "%{_weight}%"
+		set string tag "value" of nbt to "%{_value}%"
+
+	return {_item}
+
+
+command /sellfish:
+	aliases: /sf, /sell
+	trigger:
+		set {_total} to 0
+		set {_count} to 0
+
+		loop all items of player's inventory:
+			set {_v} to string tag "value" of custom nbt of loop-item
+			if {_v} is set:
+				add ({_v} parsed as number) to {_total}
+				add 1 to {_count}
+				remove loop-item from player's inventory
+
+		if {_count} = 0:
+			send "{@error}You have no fish to sell!" to player
+			stop
+
+		add {_total} to player's balance
+		fish_trackStat(player, "sold", {_total})
+
+		send "{@success}Sold {@c2}%{_count}% {@success2}fish for {@c1}$%format({_total})%{@success2}!" to player
+		play sound "entity.villager.yes" with volume 0.6 with pitch 1.2 to player
+
+function fish_openRodGUI(p: player):
+	stop if isRod({_p}'s tool) = false
+	set {_p}'s tool to getRod({_p})
+
+	set {_uuid} to "%{_p}'s uuid%"
+	set {_isAM} to true if {-am::active::%{_uuid}%} is set
+
+	set {_luck}  to fish_getStat({_p}, "luck")
+	set {_speed} to fish_getStat({_p}, "speed")
+	set {_greed} to fish_getStat({_p}, "greed")
+
+	set {_mL} to {@max-luck}
+	set {_mS} to {@max-speed}
+	set {_mG} to {@max-greed}
+
+	set {_lCost} to fish_upgradeCost({_luck},  {_mL}, 100, 60000000)
+	set {_sCost} to fish_upgradeCost({_speed}, {_mS}, 150, 90000000)
+	set {_gCost} to fish_upgradeCost({_greed}, {_mG}, 200, 120000000)
+
+	if {_isAM} = true:
+		set {_lSlot} to a random element out of (9, 10, 11, 18, 19, 20, 27, 28, 29)
+		set {_sSlot} to a random element out of (12, 13, 14, 21, 22, 23, 30, 31, 32)
+		set {_gSlot} to a random element out of (15, 16, 17, 24, 25, 26, 33, 34, 35)
+	else:
+		set {_lSlot} to 19
+		set {_sSlot} to 22
+		set {_gSlot} to 25
+
+	create a gui with virtual chest inventory with 5 rows named "ROD UPGRADES":
+		make gui slot (integers from 0 to 8)   with white stained glass pane without tooltip
+		make gui slot (integers from 36 to 44) with gray stained glass pane without tooltip
+
+		if {_luck} >= {_mL}:
+			make gui slot {_lSlot} with nether star named "{@c1}&lLUCK &8[{@c2}MAX&8]" with lore "&8ᴜᴘɢʀᴀᴅᴇ", "", "&7Boosts rare fish catch chances", "&7Level: {@c2}%{_luck}%&8/&7%{_mL}%", "", "{@success2}✔ ꜰᴜʟʟʏ ᴜᴘɢʀᴀᴅᴇᴅ"
+		else:
+			make gui slot {_lSlot} with nether star named "{@c1}&lLUCK &8[{@c2}%{_luck}%&8/{@c2}%{_mL}%&8]" with lore "&8ᴜᴘɢʀᴀᴅᴇ", "", "&7Boosts rare fish catch chances", "&7Level: {@c2}%{_luck}%&8/&7%{_mL}%", "", "&fCOST: %canPurchase({_p}, {_lCost})%$%format({_lCost})%", "", "&8ᴛʜɪꜱ ᴍᴏᴠᴇꜱ ᴛᴏ ᴘʀᴇᴠᴇɴᴛ ᴍᴀᴄʀᴏꜱ":
+				if {_p}'s balance < {_lCost}:
+					send "{@error}Need {@success2}$%format({_lCost} - {_p}'s balance)% {@error2}more!" to {_p}
+					play sound "block.note_block.bass" to {_p}
+					stop
+				if fish_getStat({_p}, "luck") >= {_mL}:
+					send "{@error}Already maxed!" to {_p}
+					stop
+				remove {_lCost} from {_p}'s balance
+				fish_setStat({_p}, "luck", fish_getStat({_p}, "luck") + 1)
+				play sound "entity.player.levelup" to {_p}
+				fish_openRodGUI({_p})
+				stop
+
+		if {_speed} >= {_mS}:
+			make gui slot {_sSlot} with sugar named "{@c1}&lSPEED &8[{@c2}MAX&8]" with lore "&8ᴜᴘɢʀᴀᴅᴇ", "", "&7Reduces fishing wait time", "&7Level: {@c2}%{_speed}%&8/&7%{_mS}%", "", "{@success2}✔ ꜰᴜʟʟʏ ᴜᴘɢʀᴀᴅᴇᴅ"
+		else:
+			make gui slot {_sSlot} with sugar named "{@c1}&lSPEED &8[{@c2}%{_speed}%&8/{@c2}%{_mS}%&8]" with lore "&8ᴜᴘɢʀᴀᴅᴇ", "", "&7Reduces fishing wait time", "&7Level: {@c2}%{_speed}%&8/&7%{_mS}%", "", "&fCOST: %canPurchase({_p}, {_sCost})%$%format({_sCost})%", "", "&8ᴛʜɪꜱ ᴍᴏᴠᴇꜱ ᴛᴏ ᴘʀᴇᴠᴇɴᴛ ᴍᴀᴄʀᴏꜱ":
+				if {_p}'s balance < {_sCost}:
+					send "{@error}Need {@success2}$%format({_sCost} - {_p}'s balance)% {@error2}more!" to {_p}
+					play sound "block.note_block.bass" to {_p}
+					stop
+				if fish_getStat({_p}, "speed") >= {_mS}:
+					send "{@error}Already maxed!" to {_p}
+					stop
+				remove {_sCost} from {_p}'s balance
+				fish_setStat({_p}, "speed", fish_getStat({_p}, "speed") + 1)
+				set {_lureEnch} to "lure %fish_getStat({_p}, "speed")%" parsed as enchantment type
+				enchant {_p}'s tool with {_lureEnch}
+				play sound "entity.player.levelup" to {_p}
+				fish_openRodGUI({_p})
+				stop
+
+		if {_greed} >= {_mG}:
+			make gui slot {_gSlot} with gold ingot named "{@c1}&lGREED &8[{@c2}MAX&8]" with lore "&8ᴜᴘɢʀᴀᴅᴇ", "", "&7Increases fish sell value", "&7Level: {@c2}%{_greed}%&8/&7%{_mG}%", "", "{@success2}✔ ꜰᴜʟʟʏ ᴜᴘɢʀᴀᴅᴇᴅ"
+		else:
+			make gui slot {_gSlot} with gold ingot named "{@c1}&lGREED &8[{@c2}%{_greed}%&8/{@c2}%{_mG}%&8]" with lore "&8ᴜᴘɢʀᴀᴅᴇ", "", "&7Increases fish sell value", "&7Level: {@c2}%{_greed}%&8/&7%{_mG}%", "", "&fCOST: %canPurchase({_p}, {_gCost})%$%format({_gCost})%", "", "&8ᴛʜɪꜱ ᴍᴏᴠᴇꜱ ᴛᴏ ᴘʀᴇᴠᴇɴᴛ ᴍᴀᴄʀᴏꜱ":
+				if {_p}'s balance < {_gCost}:
+					send "{@error}Need {@success2}$%format({_gCost} - {_p}'s balance)% {@error2}more!" to {_p}
+					play sound "block.note_block.bass" to {_p}
+					stop
+				if fish_getStat({_p}, "greed") >= {_mG}:
+					send "{@error}Already maxed!" to {_p}
+					stop
+				remove {_gCost} from {_p}'s balance
+				fish_setStat({_p}, "greed", fish_getStat({_p}, "greed") + 1)
+				play sound "entity.player.levelup" to {_p}
+				fish_openRodGUI({_p})
+				stop
+
+	open the last gui to {_p}
+
+function fish_upgradeCost(currentLvl: number, maxLvl: number, baseCost: number, maxCost: number):: number:
+	set {_exp} to 1.9
+	set {_top} to {_maxLvl} ^ {_exp} - 1
+	if {_top} <= 0:
+		return {_baseCost}
+	set {_B} to ({_maxCost} / {_baseCost}) ^ (1.0 / {_top})
+	set {_A} to {_baseCost} / {_B}
+	return {_A} * ({_B} ^ (({_currentLvl} + 1) ^ {_exp}))
+
+function fish_trackStat(p: player, key: string, amount: number):
+	add {_amount} to {fish::stats::%{_p}'s uuid%::%{_key}%}
+
+function fish_trackRarityStat(p: player, rarity: string):
+	add 1 to {fish::stats::%{_p}'s uuid%::rarity::%{_rarity}%}

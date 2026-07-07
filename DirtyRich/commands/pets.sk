@@ -1,0 +1,228 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+command /pet:
+	description: Manage your pets.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/pets
+	aliases: /pets
+	prefix: {@cmd-prefix}
+	trigger:
+		if size of {pets::%player's uuid%::*} > 0:
+			petsGUI(player)
+			stop
+		else:
+			send "{@error}You don't have any pets." to player
+			send "{@error2}            Buy some at the store: {@success2}<ttp:&fClick.><cmd:/store>/store"
+			stop
+
+command /givePets [<offline player>] [<string>]:
+	permission: op
+	trigger:
+		set {_axolotl} to    "axolotl"
+		set {_magma_cube} to "magma_cube"
+		set {_warden} to     "warden"
+		set {_slime} to      "slime"
+		set {_turtle} to     "turtle"
+		set {_bee} to        "bee"
+
+		if arg-2 = "*":
+
+			add {_axolotl}    to {pets::%arg-1's uuid%::*} if {pets::%arg-1's uuid%::*} doesn't contain {_axolotl}
+			add {_magma_cube} to {pets::%arg-1's uuid%::*} if {pets::%arg-1's uuid%::*} doesn't contain {_magma_cube}
+			add {_warden}     to {pets::%arg-1's uuid%::*} if {pets::%arg-1's uuid%::*} doesn't contain {_warden}
+			add {_slime}      to {pets::%arg-1's uuid%::*} if {pets::%arg-1's uuid%::*} doesn't contain {_slime}
+			add {_turtle}     to {pets::%arg-1's uuid%::*} if {pets::%arg-1's uuid%::*} doesn't contain {_turtle}
+			add {_bee}        to {pets::%arg-1's uuid%::*} if {pets::%arg-1's uuid%::*} doesn't contain {_bee}
+			 
+ 
+			set {pets::%arg-1's uuid%::%{_axolotl}%::gui}        to axolotl spawn egg named    "<#f754c1>&lA<#fa69ca>&lX<#fc7fd2>&lO<#ff94db>&lL<#fc7fd2>&lO<#fa69ca>&lT<#f754c1>&lL" with lore "&8ᴘᴇᴛ", "", "{@success2}Click to spawn."
+			set {pets::%arg-1's uuid%::%{_magma_cube}%::gui}     to magma cube spawn egg named "<#f79354>&lM<#fba56b>&lA<#ffb781>&lG<#fba56b>&lM<#f79354>&lA" with lore "&8ᴘᴇᴛ", "", "{@success2}Click to spawn."
+			set {pets::%arg-1's uuid%::%{_warden}%::gui}         to warden spawn egg named     "<#54f78b>&lW<#69fa9a>&lA<#7efda9>&lR<#7efda9>&lD<#69fa9a>&lE<#54f78b>&lN" with lore "&8ᴘᴇᴛ", "", "{@success2}Click to spawn."
+			set {pets::%arg-1's uuid%::%{_slime}%::gui}          to slime spawn egg named      "<#46ff2d>&lS<#61ff4c>&lL<#7cff6b>&lI<#61ff4c>&lM<#46ff2d>&lE" with lore "&8ᴘᴇᴛ", "", "{@success2}Click to spawn."
+			set {pets::%arg-1's uuid%::%{_turtle}%::gui}         to turtle spawn egg named     "<#8cff2d>&lT<#a0ff53>&lU<#b5ff78>&lR<#b5ff78>&lT<#a0ff53>&lL<#8cff2d>&lE" with lore "&8ᴘᴇᴛ", "", "{@success2}Click to spawn."
+			set {pets::%arg-1's uuid%::%{_bee}%::gui}            to bee spawn egg named        "<#fcff2d>&lB<#fdff8c>&lE<#fcff2d>&lE" with lore "&8ᴘᴇᴛ", "", "{@success2}Click to spawn."
+			send "{@success}You got &lALL {@success2}pets." to arg-1 if arg-1 is online
+
+function petsGUI(p: player):
+	create a gui with virtual chest inventory with 5 rows named "Pets":
+		make gui slot (integers from 0 to 8)   with white stained glass pane without tooltip
+		make gui slot (integers from 36 to 44) with gray stained glass pane without tooltip
+		set {_slots::*} to (integers from 10 to 16), (integers from 19 to 25), (integers from 28 to 34)
+
+		make gui slot {_slots::*} with gray dye named "&8<&7???&8>"
+		make gui slot 40 with red concrete named "{@error2}&lDESPAWN PET" with lore "", "&7Click to despawn", "&7your pet.":
+			set {pet::%{_p}'s uuid%} to false
+			close player's inventory
+		
+		set {_} to 0
+		loop {pets::%{_p}'s uuid%::*}:
+			add 1 to {_}
+			set {_pet} to loop-value
+			make gui slot {_slots::%{_}%} with {pets::%{_p}'s uuid%::%{_pet}%::gui}:
+				spawnPet({_p}, {_pet})
+
+	open the last gui to {_p}
+
+function spawnPet(p: player, pet: string):
+	close {_p}'s inventory
+	set {pet::%{_p}'s uuid%} to false
+	set {_speed} to 1
+
+	if {_pet} = "turtle":
+		spawn a turtle 1 block behind {_p}
+		set {_entity} to last spawned turtle
+		set {_speed} to 4
+
+	else if {_pet} = "bee":
+		spawn a bee 1 block behind {_p}
+		set {_entity} to last spawned bee
+
+	else if {_pet} = "slime":
+		spawn a slime 1 block behind {_p}
+		set {_entity} to last spawned slime
+
+	else if {_pet} = "warden":
+		spawn a warden 1 block behind {_p}
+		set {_entity} to last spawned warden
+
+	else if {_pet} = "magma_cube":
+		spawn a magma cube 1 block behind {_p}
+		set {_entity} to last spawned magma cube
+
+	else if {_pet} = "axolotl":
+		spawn a axolotl 1 block behind {_p}
+		set {_entity} to last spawned axolotl
+
+	if {_pet} = "warden":
+		set mob awareness of {_entity} to false
+
+	if {_pet} != "bee":
+		set {_entity}'s flying speed attribute to 0.2
+		set {_entity}'s movement speed attribute to 0.2 * {_speed}
+
+	set {_entity}'s step height attribute to 0.6
+	if {_pet} != "turtle" or "axolotl" or "bee":
+		set {_entity}'s scale attribute to 0.25
+	set {_entity}'s burning time attribute to -1
+	make {_entity} silent
+
+	set {_pet} to {_pet}.replaceAll("_", " ")
+	set {_entity}'s displayname to "%{_p}'s prefix% %{_p}%&7's %{_pet} in proper case%"
+	
+	
+	set string tag "custom;pet" of nbt of {_entity} to "yep, thats a pet"
+
+	set {pet::%{_p}'s uuid%} to {_entity}'s uuid
+
+	while {_entity} is alive:
+		if {_p} isn't online:
+			exit loop
+		else if {pet::%{_p}'s uuid%} != {_entity}'s uuid:
+			exit loop
+		else:
+			if age of {_entity} >= -40:
+				set age of {_entity} to -1200
+
+			if {_pet} = "warden":
+				set {_at} to the most angered entity of {_entity}
+				set the anger level of {_entity} towards {_at} to 0
+
+			if {riding::%{_p}'s uuid%} isn't set:
+				set {_loc} to location of {_p}
+			else:
+				set {_loc} to {riding::%{_p}'s uuid%}
+
+			set {_distance} to distance between {_entity} and {_loc}
+			
+			if {_distance} >= 15:
+				teleport {_entity} to location 1 block behind {_loc}
+
+			else if {_distance} > 5:
+				set path target of {_entity} to location 1.5 blocks behind {_loc}
+			
+			if {_entity} is not in world of {_loc}:
+				teleport {_entity} to location 1 block behind {_loc}
+		
+			wait 1 second
+
+	kill {_entity}
+
+on death:
+	set {_tag} to string tag "custom;pet" of nbt of victim
+	if {_tag} is set:
+		clear drops
+
+on entity target:
+	set {_tag} to string tag "custom;pet" of nbt of event-entity
+	if {_tag} is set:
+		cancel event
+
+on enderman enrage:
+	set {_tag} to string tag "custom;pet" of nbt of event-entity
+	if {_tag} is set:
+		cancel event
+
+on entity transform:
+	set {_tag} to string tag "custom;pet" of nbt of event-entity
+	if {_tag} is set:
+		cancel event
+
+on entity zap:
+	set {_tag} to string tag "custom;pet" of nbt of event-entity
+	if {_tag} is set:
+		cancel event
+
+on damage:
+	set {_tag} to string tag "custom;pet" of nbt of victim
+	set {_tag2} to string tag "custom;pet" of nbt of attacker
+
+	if any:
+		{_tag} is set
+		{_tag2} is set
+	then:
+		if any:
+			damage cause = kill
+			damage cause = killed
+			damage cause = custom
+			damage cause = unknown
+			damage cause = plugin
+			victim = interaction
+		then:
+			stop
+
+		cancel event
+
+on right click on entity:
+	set {_tag} to string tag "custom;pet" of nbt of event-entity
+	if {_tag} is set:
+		set {riding::%player's uuid%} to location of player
+		make player ride entity
+
+on dismount:
+	delete {riding::%event-entity's uuid%} if {riding::%event-entity's uuid%} is set
+
+on entity change block:
+	set {_tag} to string tag "custom;pet" of nbt of event-entity
+	if {_tag} is set:
+		cancel event
+
+on love mode enter:
+	set {_tag} to string tag "custom;pet" of nbt of event-entity
+	if {_tag} is set:
+		cancel event
+
+on slime split:
+	set {_tag} to string tag "custom;pet" of nbt of event-entity
+	if {_tag} is set:
+		cancel event

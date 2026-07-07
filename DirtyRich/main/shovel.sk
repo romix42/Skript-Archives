@@ -1,0 +1,405 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+on join:
+	set player's gamemode to adventure
+	if player's inventory doesn't contain wooden shovel, stone shovel, copper shovel, iron shovel, golden shovel, diamond shovel or netherite shovel:
+		set player's prestige to 0
+		reset player's suffix
+		resetPlayer(player)
+		set {rod::given::%player's uuid%} to true
+		fish_setStat(player, "luck", 0)
+		fish_setStat(player, "speed", 0)
+		fish_setStat(player, "greed", 0)
+		give getRod(player) to player
+		send "{@success2}+1 {@c1}&lFISHING ROD" to player
+		send "{@success2}+1 {@c1}&lSHOVEL"
+		set player's walk speed to 0.2
+
+on right click:
+	if event-entity = armor stand:
+		cancel event
+	name of player's tool contains "{@c1}&lSHOVEL"
+	openShovelGUI(player, player's tool)
+
+on swap hand items:
+	cancel event
+
+function get_mining_speed(i: item, block: block data) :: timespan:
+	set {_s} to ({_block}.getDestroySpeed({_i}, true) / (30 if {_i} is {_block}'s preferred tool else 100)) / (hardness of itemtype of {_block})
+	return timespan(0 if {_s} >= 1 else (1 / {_s}) / 20, seconds)
+
+function canBreak(p: player):: boolean:
+	if {_p} is op:
+		if {_p}'s gamemode = creative:
+			return true
+	
+	return false
+
+function resetPlayer(p: player):
+	setShovelData({_p}, "eff", 0)
+	setShovelData({_p}, "lvl", 0)
+	clear {shovelEnchants::%{_p}'s uuid%::*}
+	delete {shovelEnchants::%{_p}'s uuid%::*}
+
+	loop items of {_p}'s inventory:
+		if isShovel( loop-item ) = true:
+			remove loop-item from {_p}'s inventory
+
+	set {_p}'s walk speed to 0.2
+	giveShovel({_p}, 0)
+
+on block break:
+	cancel event if canBreak(player) = false
+	stop if event-block isn't sand, gravel, red concrete powder, soul sand or dirt
+	stop if bound at event-block doesn't contain bound with id "mining-area"
+	add 1 to mine block stat using sand for player
+	set {_uuid} to "%player's uuid%"
+	set {_treasure} to 1
+	set {_jackpot} to 1
+	set {_levelMulti} to 1 + getOrDefault(getShovelData(player, "eff"), 0) * 0.1
+	switch event-block:
+		case sand:
+			set {_money} to 1
+			set {_name} to "SAND"
+			set {_lvl} to 0
+		case gravel:
+			set {_money} to 1.5
+			set {_name} to "GRAVEL"
+			set {_lvl} to 1
+		case red concrete powder:
+			set {_money} to 3
+			set {_name} to "RED SAND"
+			set {_lvl} to 2
+		case soul sand:
+			set {_money} to 6
+			set {_name} to "SOUL SAND"
+			set {_lvl} to 3
+		case dirt:
+			set {_money} to 10
+			set {_name} to "DIRT"
+			set {_lvl} to 4
+
+	if getOrDefault(getShovelData(player, "lvl"), 0) < {_lvl}:
+		send "{@error}Your shovel is too weak!" to player
+		play sound "block.note_block.bass" to player
+		stop
+
+	if chance of 1.5%:
+		set {_treasure} to a random number from 1.5 to 5.0
+
+		send "{@c1}&lTREASURE: &f+%{_treasure}%x &7more money!"
+		play sound "block.chest.open" with volume 0.95 with pitch 1.35 to player
+
+	if chance of 0.05%:
+		set {_jackpot} to a random integer from 50 to 100
+		set {_seeds::*} to 0, 1, 4
+		set {_seed} to a random element out of {_seeds::*}
+
+		send "{@c1}&lJACKPOT: &f+%{_jackpot}%x &7more money!"
+		play sound "entity.pillager.celebrate" with seed {_seed} with volume 0.95 with pitch 1.85 to player
+
+	if chance of 0.5%:
+		if chance of 10%:
+			set {_r} to a random number from 1.5 to 5
+			give registerHoneyPouch(1, {_r}) to player
+
+			send "{@c1}&lHONEY FINDER: &f+1 &7honey pouch!"
+			play sound "entity.villager.celebrate" with volume 0.95 with pitch 1.25 to player
+		else:
+			set {_r} to a random number from 1 to player's balance ^ 0.80
+			give registerMoneyPouch(0, {_r}) to player
+
+			send "{@c1}&lMONEY FINDER: &f+1 &7money pouch!"
+			play sound "entity.villager.celebrate" with volume 0.95 with pitch 1.15 to player
+
+	set {_mon} to max({_money}, {_money} * getPrestigeMultiplier(player) * {_treasure} * {_jackpot} * {_levelMulti})
+	add {_mon} to player's balance
+	if {-am::active::%{_uuid}%} is set:
+		if any:
+			{-am::active::%{_uuid}%::now} isn't set
+			difference between now and {-am::active::%{_uuid}%::now} < 1 second
+		then:
+			set {_time} to "0 seconds"
+		else:
+			set {_time} to getTimeString(difference between now and {-am::active::%{_uuid}%::now})
+
+		send actionbar "{@success2}+1 {@c1}&l%{_name}% &r&8| {@success2}$%format({_mon})% &r&8| {@success2}&lAUTOMINE &7({@c2}%{_time}%&7)"
+	else:
+		send actionbar "{@success2}+1 {@c1}&l%{_name}% &r&8| {@success2}$%format({_mon})%"
+	play sound "entity.experience_orb.pickup" with volume 0.05 with pitch 2 to player
+
+on tool change:
+	if isShovel(player's tool) = true:
+		setWalkSpeed(player)
+	else:
+		setWalkSpeed(player, 0.2)
+
+on inventory click:
+	if isShovel(event-item) = true:
+		wait 2 ticks
+		if isShovel(player's tool) = true:
+			setWalkSpeed(player)
+		else:
+			setWalkSpeed(player, 0.2)
+
+function getLevelCost(lvl: number):: number:
+	set {_maxEff}      to 200
+	set {_level1Cost}  to 50
+	set {_maxCost}     to 5000000000
+
+	set {_currentEff}  to 0
+
+	loop {_lvl} times:
+		add 1 to {_currentEff}
+
+		set {_b} to ({_maxCost} / {_level1Cost}) ^ (1.0 / ({_maxEff} ^ 2 - 1))
+		set {_a} to {_level1Cost} / {_b}
+		set {_upgradeCost} to {_a} * {_b} ^ (({_currentEff} + 1) ^ 2)
+
+		add {_upgradeCost} to {_}
+	return {_}
+
+function getLevelCostV2(lvl: number):: number:
+	loop {_lvl} times:
+		add 1 to {_level}
+		if {_level} <= 1:
+			set {_upgradeCost} to 15
+		else:
+			set {_upgradeCost} to 15 * (2.718281828 ^ (0.03398493 * ({_currentEff} - 1) + 0.0002434983 * ({_currentEff} - 1)^2))
+
+
+		add {_upgradeCost} to {_}
+	return {_}
+
+function openShovelGUI(p: player, item: item):
+	stop if {_item} != {_p}'s tool
+	stop if isShovel({_item}) = false
+	updateLore({_p})
+	setWalkSpeed({_p})
+	make {_p}'s tool stop glinting if efficiency level of {_p}'s tool < 5
+
+	set {_uuid} to "%{_p}'s uuid%"
+	set {_isAM} to true if {-am::active::%{_uuid}%} is set
+
+	create a gui with virtual chest inventory with 5 rows named "SHOVEL UPGRADE":
+		make gui slot (integers from 0 to 8)   with white stained glass pane without tooltip
+		make gui slot (integers from 36 to 44) with gray stained glass pane without tooltip
+
+		if {_isAM} = true:
+			set {_possible::*} to 21, 22, 23, 13, 12, 14, 30, 31, 32
+			set {_slot} to a random element out of {_possible::*}
+			make gui slot {_possible::*} with air:
+				close {_p}'s inventory
+		else:
+			set {_slot} to 22
+
+		set {_maxEff}      to 200
+		set {_level1Cost}  to 50
+		set {_maxCost}     to 5000000000
+		set {_effsPerTier} to {_maxEff} / 5
+
+		set {_currentEff}  to getOrDefault(getShovelData({_p}, "eff"), 0)
+		set {_currentTier} to getOrDefault(getShovelData({_p}, "lvl"), 0)
+		set {_effEnchLvl}  to ceil({_currentEff} / {_effsPerTier})
+
+		if {_p} has permission "newFormula":
+			if {_currentEff} <= 1:
+				set {_upgradeCost} to 15
+			else:
+				set {_upgradeCost} to 15 * (2.718281828 ^ (0.03398493 * ({_currentEff} - 1) + 0.0002434983 * ({_currentEff} - 1)^2))
+
+		else:
+			set {_b} to ({_maxCost} / {_level1Cost}) ^ (1.0 / ({_maxEff} ^ 2 - 1))
+			set {_a} to {_level1Cost} / {_b}
+			set {_upgradeCost} to {_a} * {_b} ^ (({_currentEff} + 1) ^ 2)
+
+		set {_nextTierAt}    to ({_currentTier} + 1) * {_effsPerTier}
+		set {_effsUntilTier} to {_nextTierAt} - {_currentEff}
+
+		if {_currentEff} >= {_maxEff}:
+			make gui slot {_slot} with barrier named "{@c1}&lUPGRADE &8[{@c2}MAX&8]" with lore "&8ᴜᴘɢʀᴀᴅᴇ", "", "&7Tier: %{_currentTier}%", "&7Efficiency: {@c2}%{_effEnchLvl}%&8/&75", "", "{@success2}✔ ꜰᴜʟʟʏ ᴜᴘɢʀᴀᴅᴇᴅ", "", "&8ᴛʜɪꜱ ᴍᴏᴠᴇꜱ ᴛᴏ ᴘʀᴇᴠᴇɴᴛ ᴍᴀᴄʀᴏꜱ"
+		else:
+			if {_currentTier} < 5:
+				set {_tierLine} to "&7Next tier in: {@c2}%{_effsUntilTier}% upgrades"
+				set {_tierLine} to "&7Next tier in: {@c2}%{_effsUntilTier}% upgrade" if {_effsUntilTier} = 1
+			else:
+				set {_tierLine} to "&7Material: {@c1}&lNETHERITE{@success2} (MAX)"
+
+			make gui slot {_slot} with nether star named "{@c1}&lUPGRADE &8[{@c2}%{_currentEff}%&8/{@c2}%{_maxEff}%&8]" with lore "&8ᴜᴘɢʀᴀᴅᴇ", "", "&7Tier: %{_currentTier}%", "&7Efficiency: {@c2}%{_effEnchLvl}%&8/&75", {_tierLine}, "", "&fCOST: %canPurchase({_p}, {_upgradeCost})%$%format({_upgradeCost})%", "", "&8ᴛʜɪꜱ ᴍᴏᴠᴇꜱ ᴛᴏ ᴘʀᴇᴠᴇɴᴛ ᴍᴀᴄʀᴏꜱ":
+				if {_p}'s balance < {_upgradeCost}:
+					send "{@error}You need {@success2}$%format({_upgradeCost} - {_p}'s balance)% {@error2}more money!" to {_p}
+					play sound "block.note_block.bass" to {_p}
+					stop
+
+				if getOrDefault(getShovelData({_p}, "eff"), 0) >= {_maxEff}:
+					send "{@error}Your shovel is already maxed!" to {_p}
+					play sound "block.note_block.bass" to {_p}
+					stop
+
+				remove {_upgradeCost} from {_p}'s balance
+
+				set {_newEff}     to getOrDefault(getShovelData({_p}, "eff"), 0) + 1
+				set {_newEnchLvl} to ceil({_newEff} / {_effsPerTier})
+				setShovelData({_p}, "eff", {_newEff})
+
+				set {shovelEnchants::%{_p}'s uuid%::1}           to "eff"
+				set {shovelEnchants::%{_p}'s uuid%::eff::name}   to "Efficiency"
+				set {shovelEnchants::%{_p}'s uuid%::eff::lvl}    to {_newEnchLvl}
+				set {shovelEnchants::%{_p}'s uuid%::eff::maxLvl} to 5
+				set {shovelEnchants::%{_p}'s uuid%::eff::icon}   to "<sprite:gui:mob_effect/haste>"
+				
+				enchant {_p}'s tool with "efficiency %{_newEnchLvl}%" parsed as enchantment type if {_newEnchLvl} > 0
+
+				set {_oldTier} to getOrDefault(getShovelData({_p}, "lvl"), 0)
+				set {_newTier} to min(floor({_newEff} / {_effsPerTier}), 5)
+
+				if {_newTier} > {_oldTier}:
+					setShovelData({_p}, "lvl", {_newTier})
+					upgradeShovelMaterial({_p}, {_newTier}, {_newEnchLvl})
+					send "{@success}Shovel upgraded to tier &f%{_newTier}%{@success2}!" to {_p}
+					play sound "ui.toast.challenge_complete" with volume 1 with pitch 1 to {_p}
+				else:
+					play sound "entity.player.levelup" to {_p}
+
+				openShovelGUI({_p}, {_p}'s tool)
+				stop
+
+	open the last gui to {_p}
+
+function upgradeShovelMaterial(p: player, tier: integer, effLvl: integer):
+	switch {_tier}:
+		case 0:
+			set {_s} to wooden shovel
+		case 1:
+			set {_s} to stone shovel
+		case 2:
+			set {_s} to copper shovel
+		case 3:
+			set {_s} to iron shovel
+		case 4:
+			set {_s} to diamond shovel
+		case 5:
+			set {_s} to netherite shovel
+		default:
+			set {_s} to wooden shovel
+
+	if {_tier} >= 5:
+		make {_s} glint
+	else:
+		make {_s} stop glinting
+
+	set item flags of {_s} to hide enchants and hide attributes, hide breakable blocks, hide unbreakable
+	set {_s} to hideAttributes(unbreakable {_s})
+
+	apply can break adventure predicate to {_s}:
+		blocks: sand, gravel, red concrete powder, soul sand, dirt
+
+	enchant {_s} with "efficiency %{_effLvl}%" parsed as enchantment type if {_effLvl} > 0
+
+	set {_p}'s tool to {_s}
+	updateLore({_p})
+
+function setShovelData(p: player, data: string, value: object):
+	set {shovel::%{_p}'s uuid%::%{_data}%} to {_value}
+
+function getShovelData(p: player, data: string):: number:
+	return {shovel::%{_p}'s uuid%::%{_data}%}
+
+function canPurchase(p: player, cost: number):: string:
+	return "{@success2}" if {_p}'s balance >= {_cost}
+	return "{@error2}"
+
+function isShovel(item: item):: boolean:
+	return true if paper tags of {_item} contains paper tag "shovels"
+	return false
+
+function getOrDefault(obj: object, default: object):: object:
+	return {_default} if "%{_obj}%" = "<none>"
+	return {_obj}
+
+function setWalkSpeed(p: player, speed: number = 69):
+	if {_speed} = 69:
+		set {_p}'s walk speed to max(0.2, getOrDefault(getShovelData({_p}, "eff"), 0)/ 100)
+	else:
+		set {_p}'s walk speed to max(0.2, {_speed})
+
+function updateLore(p: player):
+	clear {_lines::*}
+
+	set {_lines::1} to mini message from "<!italic><dark_gray>ᴛᴏᴏʟ"
+	set {_lines::2} to mini message from "<!italic>"
+	set {_lines::3} to mini message from "<!italic>{@c1}<b>UPGRADES"
+	set {_lines::4} to mini message from "<!italic>"
+
+	set {_} to 4
+	loop {shovelEnchants::%{_p}'s uuid%::*}:
+		add 1 to {_}
+		set {_ench}   to loop-value
+		set {_name}   to {shovelEnchants::%{_p}'s uuid%::%{_ench}%::name}
+		set {_lvl}    to {shovelEnchants::%{_p}'s uuid%::%{_ench}%::lvl}
+		set {_maxLvl} to {shovelEnchants::%{_p}'s uuid%::%{_ench}%::maxLvl}
+		set {_icon}   to raw {shovelEnchants::%{_p}'s uuid%::%{_ench}%::icon} ? ""
+
+		if {_lvl} = {_maxLvl}:
+			set {_line} to raw "<!italic> <white>%{_icon}% <#92ff60>%{_name}% <gray>[<#ffff28><b>%{_lvl}%<reset><!italic><gray>]"
+		else:
+			set {_line} to raw "<!italic> <white>%{_icon}% <#92ff60>%{_name}% <gray>[<white><b>%{_lvl}%<reset><!italic><gray>]"
+
+		set {_lines::%{_}%} to mini message from raw {_line}
+
+	add 1 to {_}
+	set {_lines::%{_}%} to mini message from "<!italic>"
+
+	add 1 to {_}
+	set {_lines::%{_}%} to mini message from "<!italic><gray>ʀɪɢʜᴛ-ᴄʟɪᴄᴋ ᴛᴏ ᴜᴘɢʀᴀᴅᴇ"
+
+	set component lore of {_p}'s tool to {_lines::*}
+	set name of {_p}'s tool to "{@c1}&lSHOVEL &r&7[{@c2}%getOrDefault(getShovelData({_p}, "eff"), 0)%&7]"
+
+function giveShovel(p: player, t: integer = 0):
+	if {_t} > 5:
+		set {_t} to 5
+	
+	if {_t} < 0:
+		set {_t} to 0
+
+	switch {_t}:
+		case 0:
+			set {_shovel} to wooden shovel
+		case 1:
+			set {_shovel} to stone shovel
+		case 2:
+			set {_shovel} to copper shovel
+		case 3:
+			set {_shovel} to iron shovel
+		case 4:
+			set {_shovel} to diamond shovel
+		case 5:
+			set {_shovel} to netherite shovel
+		default:
+			set {_shovel} to wooden shovel
+
+	if {_t} >= 5:
+		make {_shovel} glint
+
+
+	set item flags of {_shovel} to hide enchants and hide attributes, hide breakable blocks, hide unbreakable
+	set               {_shovel} to hideAttributes(unbreakable {_shovel})
+	set name of       {_shovel} to "{@c1}&lSHOVEL &r&7[{@c2}%{_t}%&7]"
+	set lore of       {_shovel} to "&8ᴛᴏᴏʟ", "", "{@c1}&lUPGRADES", ""
+	apply can break adventure predicate to {_shovel}:
+		blocks: sand, gravel, red concrete powder, soul sand, dirt
+
+
+	give  {_shovel} to {_p}
+

@@ -1,0 +1,938 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	server: <##FFFF28>&lD<##FFFF3B>&lI<##FFFF4E>&lR<##FFFF61>&lT<##FFFF74>&lY<##FFFF61>&lR<##FFFF4E>&lI<##FFFF3B>&lC<##FFFF28>&lH
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+command /resetData [<offline player>]:
+	permission: op
+	trigger:
+		clear {shovel::%arg-1's uuid%::*}
+		clear {shovelEnchants::%arg-1's uuid%::*}
+		clear {backPack::%arg-1's uuid%::*}
+		clear {-reloadingBlock::%arg-1's uuid%::*}
+		clear {backpack::%arg-1's uuid%::*}
+		clear arg-1's inventory
+		set arg-1's balance to 0
+		set arg-1's prestige to 0
+		reset arg-1's suffix
+
+		kick arg-1 due to "{@error2}YOUR DATA WAS RESET.%nl%{@success2}&lREJOIN" if arg-1 is online 
+		send "{@success}Reset data for &f%arg-1%" to player
+
+
+function broadcastPurchase(p: offlineplayer, amount: integer, price: number):
+    run section {-func::getPlayerHead} async with {_p} and store result in {_head::*} and wait
+    broadcast formatted "&8&m                                                                    "
+    broadcast formatted " %{_head::1}% <##D9D93E>&lNEW PURCHASE!"
+    broadcast formatted " %{_head::2}%"
+    broadcast formatted " %{_head::3}% <##E0E07A>» <##ffffff>%{_p}%<##E0E07A> just bought honey!"
+    broadcast formatted " %{_head::4}%"
+    broadcast formatted " %{_head::5}% <##E0E07A>| &7Package: <##ffffff>%{_amount}% HONEY"
+    broadcast formatted " %{_head::6}% <##E0E07A>| &7Price: <##D8D8A8>%{_price}% USD<##E0E07A>"
+    broadcast formatted " %{_head::7}% <##FFFF41>| &7Support us: &f<ttp:&fClick to open.><url:https://dirtyrich.craftingstore.net/>dirtyrich.craftingstore.net"
+    broadcast formatted " %{_head::8}%"
+    broadcast formatted "&8&m                                                                    "
+
+command /giveHoney [<offline player>] [<number>] [<number>]:
+	permission: op
+	trigger:
+		clear {_msg::*}
+		loop all players:
+			console command "pxmusic import hell1.json"
+			play and forget song "pxmusic:hell1" parsed as song with listeners loop-player
+		wait 1 second
+
+		broadcastPurchase(arg-1, arg-2, arg-3)
+		add arg-2 to arg-1's honey
+		send "{@prefix}{@success2}+ &f%arg-2% <##ffb516>&lHONEY&r" to arg-1 if arg-1 is online
+		send "%arg-1% bought %arg-2% honey" to console
+		refreshHoneyTop()
+
+		set {_emoji} to reaction "heart"
+		create a new container with unique id 50 and store it in {_container}:
+			create a new container section and store it in {_section}:
+				add "### NEW PURCHASE 💸" to content of the section
+				if getLinkedUser( arg-1 ) != "NOT LINKED":
+					add "**%arg-1%** (%getLinkedUser( arg-1 )%) has purchased **%arg-2% HONEY** from our store! %nl%[Buy here](https://dirtyrich.craftingstore.net)" to content of the section
+				else:
+					add "**%arg-1%** has purchased **%arg-2% HONEY** from our store! %nl%[Buy here](https://dirtyrich.craftingstore.net)" to content of the section
+				add "-# Thank you for supporting us!" to content of the section
+
+				set accessory of the section to (new thumbnail with source (file upload from url "https://cravatar.eu/head/%arg-1's uuid%/256.png"))
+			add {_section} to content of the container
+
+		post {_container} to channel with id "1496774004453933126" and store it in {_dc}
+		react to {_dc} with {_emoji}
+
+function row(n: integer):: integer:
+	return {_n} * 9 -1
+
+function punishmentGUI(p: offline player, staff: player):
+	delete {-punishing::%{_staff}'s uuid%::active}
+	delete {-punishing::%{_staff}'s uuid%::type}
+	delete {-punishing::%{_staff}'s uuid%::p}
+	clear {-punishing::%{_staff}'s uuid%::*}
+	create a gui with virtual chest inventory with 5 rows named "STAFF — %{_p}%":
+		make gui slot (integers between 0 and 44) with light gray stained glass pane without tooltip
+		make gui slot (integers between 0 and 8) with gray stained glass pane without tooltip
+		make gui slot (integers between 36 and 44) with white stained glass pane without tooltip
+
+		set {_name} to "{@success2}%{_p}% &8[&7ONLINE&8]" if {_p} is online
+		set {_name} to "{@error2}%{_p}% &8[&7OFFLINE&8]"  if {_p} isn't online
+		set {_totalPunishments} to {punishments::%{_p}'s uuid%::total-warnings} ? 0 + {punishments::%{_p}'s uuid%::total-kicks} ? 0 + {punishments::%{_p}'s uuid%::total-mutes} ? 0 + {punishments::%{_p}'s uuid%::total-bans} ? 0 + {punishments::%{_p}'s uuid%::total-blacklists} ? 0
+		set {_totalPunishments} to "{@error2}%{_totalPunishments}%" if {_totalPunishments} > 0
+		set {_totalPunishments} to "{@success2}0" if {_totalPunishments} <= 0
+
+
+		clear {_lore::*}
+		add "&m&8                                         " to {_lore::*}
+		add "&7ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ" to {_lore::*}
+		add " &8● &fLatest IP {@c1}%{player::%{_p}%::latest-ip} ? "127.0.0.1"%" to {_lore::*}
+		add " &8● &fTotal IPs {@c1}%size of {player::%{_p}'s uuid%::ips::*} ? 0%" to {_lore::*}
+		add " &8● &fFirst Join {@c1}%({player::%{_p}'s uuid%::first-join} ? unix date of 0) formatted as "yyyy/MM/dd HH:mm:ss z"%" to {_lore::*}
+		add "" to {_lore::*}
+		add "&7ᴘᴜɴɪꜱʜᴍᴇɴᴛꜱ &7(%{_totalPunishments}%&7)" to {_lore::*}
+		add " &8● &fWarnings {@error2}%{punishments::%{_p}'s uuid%::total-warnings} ? "{@success2}0"%" to {_lore::*}
+		add " &8● &fKicks {@error2}%{punishments::%{_p}'s uuid%::total-kicks} ? "{@success2}0"%" to {_lore::*}
+		add " &8● &fMutes {@error2}%{punishments::%{_p}'s uuid%::total-mutes} ? "{@success2}0"%" to {_lore::*}
+		add " &8● &fBans {@error2}%{punishments::%{_p}'s uuid%::total-bans} ? "{@success2}0"%" to {_lore::*}
+		add " &8● &fBlacklists {@error2}%{punishments::%{_p}'s uuid%::total-blacklists} ? "{@success2}0"%" to {_lore::*}
+		add "&m&8                                         " to {_lore::*}
+		set {_lore} to join {_lore::*} using nl
+
+		make gui slot 4 with skull of {_p} named {_name} with lore {_lore}
+
+		make gui slot 20 with lime concrete   named "{@c1}&lWARN"      with lore "&8ᴘᴜɴɪꜱʜᴍᴇɴᴛ", "", "&7Click to warn &f%{_p}%&7.",      "", "{@c2}ᴄʟɪᴄᴋ":
+			issuePunishment("warning", {_p}, {_staff})
+		make gui slot 21 with yellow concrete named "{@c1}&lKICK"      with lore "&8ᴘᴜɴɪꜱʜᴍᴇɴᴛ", "", "&7Click to kick &f%{_p}%&7.",      "", "{@c2}ᴄʟɪᴄᴋ":
+			issuePunishment("kick", {_p}, {_staff})
+		make gui slot 22 with orange concrete named "{@c1}&lMUTE"      with lore "&8ᴘᴜɴɪꜱʜᴍᴇɴᴛ", "", "&7Click to mute &f%{_p}%&7.",      "", "{@c2}ᴄʟɪᴄᴋ":
+			issuePunishment("mute", {_p}, {_staff})
+		make gui slot 23 with red concrete    named "{@c1}&lBAN"       with lore "&8ᴘᴜɴɪꜱʜᴍᴇɴᴛ", "", "&7Click to ban &f%{_p}%&7.",       "", "{@c2}ᴄʟɪᴄᴋ":
+			issuePunishment("ban", {_p}, {_staff})
+		make gui slot 24 with black concrete  named "{@c1}&lBLACKLIST" with lore "&8ᴘᴜɴɪꜱʜᴍᴇɴᴛ", "", "&7Click to blacklist &f%{_p}%&7.", "", "{@c2}ᴄʟɪᴄᴋ":
+			issuePunishment("blacklist", {_p}, {_staff})
+
+
+		open last gui to {_staff}
+
+
+function issuePunishment(type: string, p: offline player, staff: player, error: string = ""):
+	set {_totalPunishments} to {punishments::%{_p}'s uuid%::total-warnings} ? 0 + {punishments::%{_p}'s uuid%::total-kicks} ? 0 + {punishments::%{_p}'s uuid%::total-mutes} ? 0 + {punishments::%{_p}'s uuid%::total-bans} ? 0 + {punishments::%{_p}'s uuid%::total-blacklists} ? 0
+	set {_totalPunishments} to "{@error2}%{_totalPunishments}%" if {_totalPunishments} > 0
+	set {_totalPunishments} to "{@success2}0" if {_totalPunishments} <= 0
+
+	set {_name} to "{@success2}%{_p}% &8[&7ONLINE&8]" if {_p} is online
+	set {_name} to "{@error2}%{_p}% &8[&7OFFLINE&8]" if {_p} isn't online
+
+	clear {_lore::*}
+	add "&m&8                                         " to {_lore::*}
+	add "&7ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ" to {_lore::*}
+	add " &8● &fLatest IP {@c1}%{player::%{_p}%::latest-ip} ? "127.0.0.1"%               " to {_lore::*}
+	add " &8● &fTotal IPs {@c1}%size of {player::%{_p}'s uuid%::ips::*} ? 0%                               " to {_lore::*}
+	add " &8● &fFirst Join {@c1}%({player::%{_p}'s uuid%::first-join} ? unix date of 0) formatted as "yyyy/MM/dd HH:mm:ss z"%" to {_lore::*}
+	add "" to {_lore::*}
+	add "&7ᴘᴜɴɪꜱʜᴍᴇɴᴛꜱ &7(%{_totalPunishments}%&7)" to {_lore::*}
+	add " &8● &fWarnings {@error2}%{punishments::%{_p}'s uuid%::total-warnings} ? "{@success2}0"% " to {_lore::*}
+	add " &8● &fKicks {@error2}%{punishments::%{_p}'s uuid%::total-kicks} ? "{@success2}0"%      " to {_lore::*}
+	add " &8● &fMutes {@error2}%{punishments::%{_p}'s uuid%::total-mutes} ? "{@success2}0"%     " to {_lore::*}
+	add " &8● &fBans {@error2}%{punishments::%{_p}'s uuid%::total-bans} ? "{@success2}0"%      " to {_lore::*}
+	add " &8● &fBlacklists {@error2}%{punishments::%{_p}'s uuid%::total-blacklists} ? "{@success2}0"%" to {_lore::*}
+	add "&m&8                                         " to {_lore::*}
+	if {_error} isn't "":
+		add "" to {_lore::*}
+		add "{@error2}&m                    " to {_lore::*}
+		add "{@error2}&l⚠ ERROR" to {_lore::*}
+		add "{@error2}%{_error}%" to {_lore::*}
+		add "{@error2}&m                    " to {_lore::*}
+	set {_info} to join {_lore::*} using nl
+
+	set {_reason} to {-punishing::%{_staff}'s uuid%::reason} ? "No reason provided."
+	set {_timeStr} to {-punishing::%{_staff}'s uuid%::time-str} ? "60"
+	set {_savedUnit} to {-punishing::%{_staff}'s uuid%::unit} ? "minute"
+
+	open multi action dialog to {_staff}:
+		title: "STAFF — %{_p}%"
+		after_action: "close"
+		columns: 2
+		body:
+			add item body:
+				item: skull of {_p} named "{@c1}&l%{_p}%"
+			add text body:
+				contents: {_info}
+		inputs:
+			add single option input:
+				key: "type"
+				label: "Punishment Type"
+				width: 200
+				options:
+					loop "warn", "kick", "mute", "ban", "blacklist":
+						add options entry:
+							id: "%loop-value%"
+							display: "%loop-value%"
+							initial: whether "%loop-value%" = {_type}
+			add text input:
+				key: "reason"
+				label: "Reason"
+				initial: {_reason}
+				max_length: 95
+				multiline_max_lines: 3
+				multiline_height: 40
+				width: 200
+			add text input:
+				key: "time"
+				label: "Duration"
+				initial: {_timeStr}
+				max_length: 6
+				width: 200
+			add single option input:
+				key: "unit"
+				label: "Unit"
+				width: 200
+				options:
+					set {_allTimespan::*} to all timespan periods
+					remove {_allTimespan::1}, {_allTimespan::2} from {_allTimespan::*}
+					loop {_allTimespan::*}:
+						add options entry:
+							id: "%loop-value%"
+							display: "%loop-value%(s)"
+							initial: whether "%loop-value%" = {_savedUnit}
+		actions:
+			add callback action button:
+				label: "{@success2}Confirm"
+				width: 100
+				trigger:
+					set {_type} to string tag "type" of event-nbt
+					set {_reason} to string tag "reason" of event-nbt
+					set {_reason} to "No reason provided." if {_reason} is ""
+					set {-punishing::%{_staff}'s uuid%::reason} to {_reason}
+
+					if {_type} is "warn" or "kick":
+						handlePunishment({_staff}, {_p}, {_type}, 999 years, {_reason})
+						play sound "entity.player.levelup" with pitch 1.5 to {_staff}
+						clear {-punishing::%{_staff}'s uuid%::*}
+					else:
+						set {_timeStr} to string tag "time" of event-nbt
+						set {_unitStr} to string tag "unit" of event-nbt
+						set {-punishing::%{_staff}'s uuid%::time-str} to {_timeStr}
+						set {-punishing::%{_staff}'s uuid%::unit} to {_unitStr}
+
+						set {_timeAmt} to {_timeStr} parsed as number
+						if {_timeAmt} is not set:
+							issuePunishment({_type}, {_p}, {_staff}, "Duration must be a valid number (e.g. 30, 1.5).")
+							stop
+						if {_timeAmt} <= 0:
+							issuePunishment({_type}, {_p}, {_staff}, "Duration must be greater than 0.")
+							stop
+						if {_timeAmt} > 999:
+							issuePunishment({_type}, {_p}, {_staff}, "Duration cannot exceed 999.")
+							stop
+
+						set {_unit} to {_unitStr} parsed as timespan period
+						if {_unit} is not set:
+							issuePunishment({_type}, {_p}, {_staff}, "Invalid time unit selected.")
+							stop
+
+						set {_finalTime} to timespan({_timeAmt}, {_unit})
+						handlePunishment({_staff}, {_p}, {_type}, {_finalTime}, {_reason})
+						play sound "entity.player.levelup" with pitch 1.5 to {_staff}
+						clear {-punishing::%{_staff}'s uuid%::*}
+			add callback action button:
+				label: "{@error2}Back"
+				width: 100
+				trigger:
+					clear {-punishing::%{_staff}'s uuid%::*}
+					punishmentGUI({_p}, {_staff})
+
+#
+#> @param arg-1  announce | kick | warn | mute | tempmute | unmute | ban | tempban | unban | blacklist | tempblacklist | unblacklist | history | alts
+#> @param arg-2  Announce: word-1 of text | Punishments: player | *
+#> @param arg-3  Announce: word-2 of text | Temp punishments: duration | Perm punishments: reason
+#> @param arg-4  Announce: word-3 of text | Temp punishments: reason
+#
+command /staff [<string>] [<string>] [<string>] [<string>]:
+	description: Main staff tree.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/staff help
+	prefix: {@cmd-prefix}
+	trigger:
+		if arg-1 isn't set:
+			send "{@error2}Usage: &f/staff [punish] <player>" to player
+			send "{@error2}Usage: &f/staff [mute|ban|...] <player>" to player
+			stop 
+			
+		switch arg-1:
+			case "announce":
+				if arg-2 isn't set:
+					send "{@error}Text isn't set!" to player
+					stop
+
+				set {_text} to "%formatted arg-2%"
+				set {_text} to "%formatted arg-2% %formatted arg-3%" if arg-3 is set
+				set {_text} to "%formatted arg-2% %formatted arg-3% %formatted arg-4%" if arg-4 is set
+
+				send "" to all players
+				send "{@prefix}%{_text}%" to all players
+				send "" to all players
+				play sound "block.note_block.flute" to all players
+
+			case "mute":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+
+				if (arg-2 parsed as offline player) is op:
+					send "{@error}You can't mute that player!" to player
+					stop
+
+				set {_reason} to "%arg-3% %arg-4 ? ""%" if arg-3 is set else "No reason provided."
+				handlePunishment(player, arg-2 parsed as offline player, "mute", 999 years, {_reason})
+
+			case "unmute":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+
+				set {_reason} to "%arg-3% %arg-4 ? ""%" if arg-3 is set else "No reason provided."
+				handlePunishmentRemoval(player, arg-2 parsed as offline player, "mute", {_reason})
+
+			case "ban":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+
+				if (arg-2 parsed as offline player) is op:
+					send "{@error}You can't ban that player!" to player
+					stop
+
+				set {_reason} to "%arg-3% %arg-4 ? ""%" if arg-3 is set else "No reason provided."
+				handlePunishment(player, arg-2 parsed as offline player, "ban", 999 years, {_reason})
+
+			case "unban":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+
+				set {_reason} to "%arg-3% %arg-4 ? ""%" if arg-3 is set else "No reason provided."
+				handlePunishmentRemoval(player, arg-2 parsed as offline player, "ban", {_reason})
+
+			case "blacklist":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+
+				if (arg-2 parsed as offline player) is op:
+					send "{@error}You can't blacklist that player!" to player
+					stop
+
+				set {_reason} to "%arg-3% %arg-4 ? ""%" if arg-3 is set else "No reason provided."
+				handlePunishment(player, arg-2 parsed as offline player, "blacklist", 999 years, {_reason})
+
+			case "unblacklist":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+
+				set {_reason} to "%arg-3% %arg-4 ? ""%" if arg-3 is set else "No reason provided."
+				handlePunishmentRemoval(player, arg-2 parsed as offline player, "blacklist", {_reason})
+
+			case "history":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+
+				mainHistory(player, arg-2 parsed as offline player)
+
+			case "alts":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+
+				loop {player::%uuid of (arg-2 parsed as offline player)%::ips::*}:
+					loop {accounts::%loop-value-1%::*}:
+						set {_alt} to loop-value-2 parsed as offline player
+						set {_altUuid} to uuid of {_alt}
+						set {_ip} to {player::%{_altUuid}%::latest-ip}
+
+						if {_accountedAlts::*} contains {_alt}:
+							continue
+
+						add {_alt} to {_accountedAlts::*}
+						add "%{_ip}%;%{_alt}%" to {_alts::*}
+
+				alts(player, arg-2 parsed as offline player, {_alts::*}, 1)
+
+			case "punish":
+				if arg-2 isn't set:
+					send "{@error}Player isn't set!" to player
+					stop
+				
+				issuePunishment( "warn", arg-2 parsed as offline player, player )
+
+			default:
+				send "{@error2}Usage: &f/staff [punish] <player>" to player
+				send "{@error2}Usage: &f/staff [mute|ban|...] <player>" to player
+		
+
+# tab
+on tab complete of "/staff":
+	set tab completions for position 1 to "announce", "mute", "unmute", "ban", "unban", "blacklist", "unblacklist", "history", "alts", "punish"
+
+	if tab arg-1 = "announce":
+		set tab completions for position 2 to "<text>"
+
+	if tab arg-1 is "mute" or "ban" or "blacklist":
+		set {_p::*} to all players
+		remove player from {_p::*}
+		set tab completions for position 2 to {_p::*} where [input isn't op]
+		set tab completions for position 3 to "<reason>"
+
+	if tab arg-1 is "unmute" or "unban" or "unblacklist":
+		set tab completions for position 2 to all players
+		set tab completions for position 3 to "<reason>"
+
+	if tab arg-1 is "history" or "alts", "punish":
+		set tab completions for position 2 to all players
+
+# events
+on connect:
+	checkPunishmentExpiry(player, "ban")
+
+	if {player::%uuid of player%::ips::*} does not contain ip of player:
+		add ip of player to {player::%uuid of player%::ips::*}
+
+	if {accounts::%ip of player%::*} does not contain uuid of player:
+		add uuid of player to {accounts::%ip of player%::*}
+
+	if {player::%uuid of player%::first-join} is not set:
+		set {player::%uuid of player%::first-join} to now
+
+	set {player::%uuid of player%::latest-ip} to ip of player
+
+	if {ip::%ip of player%::first-join} is not set:
+		set {ip::%ip of player%::first-join} to now
+
+	set {_banId} to {punishments::%uuid of player%::ban}
+	set {_blacklistId} to {punishments::%uuid of player%::blacklist}
+	set {_blacklistUuid} to uuid of player
+
+	if {_blacklistId} is not set:
+		loop {player::%uuid of player%::ips::*}:
+			loop {accounts::%loop-value-1%::*}:
+				set {_alt} to (loop-value-2 parsed as offline player)
+				set {_altUuid} to uuid of {_alt}
+
+				if {punishments::%{_altUuid}%::blacklist} is set:
+					set {_blacklistUuid} to {_altUuid}
+					set {_blacklistId} to {punishments::%{_altUuid}%::blacklist}
+					set {_blacklistAssociate} to {_alt}
+					continue
+
+	if {_blacklistId} is set:
+		checkPunishmentExpiry(player, "blacklist")
+
+		if {punishments::%{_blacklistUuid}%::blacklist-%{_blacklistId}%::duration} >= 999 years:
+			if {_blacklistAssociate} is not set:
+				kick player due to formatted "{@server}%nl%%nl%{@error2}YOUR IP IS BLACKLISTED%nl%%nl%{@error2}Reason: &f%{punishments::%{_blacklistUuid}%::blacklist-%{_blacklistId}%::reason}%%nl%"
+			else:
+				kick player due to formatted "{@server}%nl%%nl%{@error2}YOUR IP IS BLACKLISTED%nl%%nl%{@error2}Reason: &f%{punishments::%{_blacklistUuid}%::blacklist-%{_blacklistId}%::reason}%%nl%{@error2}Associated account: &f%{_blacklistAssociate}%%nl%"
+		else:
+			set {_elapsedTime} to difference between now and {punishments::%{_blacklistUuid}%::blacklist-%{_blacklistId}%::issued-at}
+			set {_remainingTime} to difference between {_elapsedTime} and {punishments::%{_blacklistUuid}%::blacklist-%{_blacklistId}%::duration}
+
+			if {_blacklistAssociate} is not set:
+				kick player due to formatted "{@server}%nl%%nl%{@error2}YOUR IP IS BLACKLISTED%nl%%nl%{@error2}Expires in: &f%getTimeString({_remainingTime})%%nl%{@error2}Reason: &f%{punishments::%{_blacklistUuid}%::blacklist-%{_blacklistId}%::reason}%%nl%"
+			else:
+				kick player due to formatted "{@server}%nl%%nl%{@error2}YOUR IP IS BLACKLISTED%nl%%nl%{@error2}Expires in: &f%getTimeString({_remainingTime})%%nl%{@error2}Reason: &f%{punishments::%{_blacklistUuid}%::blacklist-%{_blacklistId}%::reason}%%nl%{@error2}Associated account: &f%{_blacklistAssociate}%%nl%"
+
+	else if {_banId} is set:
+		if {punishments::%uuid of player%::ban-%{_banId}%::duration} >= 999 years:
+			kick player due to formatted "{@server}%nl%%nl%{@error2}YOU ARE BANNED%nl%%nl%{@error2}Reason: &f%{punishments::%uuid of player%::ban-%{_banId}%::reason}%%nl%{@error2}Duration: &fPermanent%nl%"
+		else:
+			set {_elapsedTime} to difference between now and {punishments::%uuid of player%::ban-%{_banId}%::issued-at}
+			set {_remainingTime} to difference between {_elapsedTime} and {punishments::%uuid of player%::ban-%{_banId}%::duration}
+			kick player due to formatted "{@server}%nl%%nl%{@error2}YOU ARE BANNED%nl%%nl%{@error2}Reason: &f%{punishments::%uuid of player%::ban-%{_banId}%::reason}%%nl%{@error2}Expires in: &f%getTimeString({_remainingTime})%%nl%"
+
+function getLinkedUser(p: player):: string:
+	if {linked::player::%{_p}'s uuid%} is true:
+		return "<@%{linked::player::%{_p}'s uuid%::ID}%>"
+	else:
+		return "NOT LINKED"
+
+# punish
+function handlePunishment(player: Player, target: Offline Player, type: String, duration: Timespan, reason: String):
+	set {_playerUuid} to uuid of {_player}
+	set {_targetUuid} to uuid of {_target}
+	set {_executorName} to {_player} if {_player} is set else "Console"
+
+	set {_dcID} to "1495814638196232362"
+	set {_linkedStaff} to getLinkedUser( {_player} )
+	set {_linkedTarget} to getLinkedUser( {_target} )
+
+	# warn
+	if {_type} is "warning":
+		set {_totalWarnings} to {punishments::%{_targetUuid}%::total-warnings}
+		if {_totalWarnings} is not set:
+			set {_totalWarnings} to 0
+		add 1 to {_totalWarnings}
+
+		set {punishments::%{_targetUuid}%::total-warnings} to {_totalWarnings}
+		set {punishments::%{_targetUuid}%::warning-%{_totalWarnings}%::reason} to {_reason}
+		set {punishments::%{_targetUuid}%::warning-%{_totalWarnings}%::duration} to {_duration}
+		set {punishments::%{_targetUuid}%::warning-%{_totalWarnings}%::issuer} to {_playerUuid} if {_executorName} is not "Console" else "Console"
+		set {punishments::%{_targetUuid}%::warning-%{_totalWarnings}%::issued-at} to now
+
+		if {_target} is online:
+			send "" to {_target}
+			send "%centerText("{@server}")%" to {_target}
+			send "%centerText("{@error2}YOU HAVE BEEN WARNED")%" to {_target}
+			send "" to {_target}
+			send "  {@error2}Reason: &f%{_reason}%" to {_target}
+			send "" to {_target}
+
+		send "{@success}Warned &f%{_target}% {@success2}for &f%{_reason}%{@success2}." to {_player}
+
+	# kick
+	else if {_type} is "kick":
+		set {_totalKicks} to {punishments::%{_targetUuid}%::total-kicks}
+		if {_totalKicks} is not set:
+			set {_totalKicks} to 0
+		add 1 to {_totalKicks}
+
+		set {punishments::%{_targetUuid}%::total-kicks} to {_totalKicks}
+		set {punishments::%{_targetUuid}%::kick-%{_totalKicks}%::reason} to {_reason}
+		set {punishments::%{_targetUuid}%::kick-%{_totalKicks}%::duration} to {_duration}
+		set {punishments::%{_targetUuid}%::kick-%{_totalKicks}%::issuer} to {_playerUuid} if {_executorName} is not "Console" else "Console"
+		set {punishments::%{_targetUuid}%::kick-%{_totalKicks}%::issued-at} to now
+
+		if {_target} is online:
+			kick {_target} due to formatted "{@server}%nl%%nl%{@error2}YOU WERE KICKED%nl%%nl%{@error2}Reason: &f%{_reason}%%nl%{@error2}Kicked by: &f%{_executorName}%%nl%%nl%"
+
+		send "{@success}Kicked &f%{_target}% {@success2}for &f%{_reason}%{@success2}." to {_player}
+
+	# mute
+	else if {_type} is "mute":
+		if {punishments::%{_targetUuid}%::mute} is set:
+			send "{@error}That player already has an active mute!" to {_player}
+			stop
+
+		set {_totalMutes} to {punishments::%{_targetUuid}%::total-mutes}
+		if {_totalMutes} is not set:
+			set {_totalMutes} to 0
+		add 1 to {_totalMutes}
+
+		set {punishments::%{_targetUuid}%::total-mutes} to {_totalMutes}
+		set {punishments::%{_targetUuid}%::mute} to {_totalMutes}
+		set {punishments::%{_targetUuid}%::mute-%{_totalMutes}%::reason} to {_reason}
+		set {punishments::%{_targetUuid}%::mute-%{_totalMutes}%::duration} to {_duration}
+		set {punishments::%{_targetUuid}%::mute-%{_totalMutes}%::issuer} to {_playerUuid} if {_executorName} is not "Console" else "Console"
+		set {punishments::%{_targetUuid}%::mute-%{_totalMutes}%::issued-at} to now
+
+		if {_target} is online:
+			send "" to {_target}
+			send "%centerText("{@server}")%" to {_target}
+			send "%centerText( "{@error2}YOU HAVE BEEN MUTED" )%" to {_target}
+			send "" to {_target}
+			if {_duration} < 999 years:
+				send "  {@error2}Duration: &f%getTimeString({_duration})%" to {_target}
+			send "  {@error2}Reason: &f%{_reason}%" to {_target}
+			send "" to {_target}
+
+		if {_duration} >= 999 years:
+			send "{@success}Permanently muted &f%{_target}% {@success2}for &f%{_reason}%{@success2}." to {_player}
+		else:
+			send "{@success}Muted &f%{_target}% {@success2}for &f%getTimeString({_duration})% {@success2}due to &f%{_reason}%{@success2}." to {_player}
+
+	# ban
+	else if {_type} is "ban":
+		if {punishments::%{_targetUuid}%::ban} is set:
+			send "{@error}That player already has an active ban!" to {_player}
+			stop
+
+		set {_totalBans} to {punishments::%{_targetUuid}%::total-bans}
+		if {_totalBans} is not set:
+			set {_totalBans} to 0
+		add 1 to {_totalBans}
+
+		set {punishments::%{_targetUuid}%::total-bans} to {_totalBans}
+		set {punishments::%{_targetUuid}%::ban} to {_totalBans}
+		set {punishments::%{_targetUuid}%::ban-%{_totalBans}%::reason} to {_reason}
+		set {punishments::%{_targetUuid}%::ban-%{_totalBans}%::duration} to {_duration}
+		set {punishments::%{_targetUuid}%::ban-%{_totalBans}%::issuer} to {_playerUuid} if {_executorName} is not "Console" else "Console"
+		set {punishments::%{_targetUuid}%::ban-%{_totalBans}%::issued-at} to now
+
+		if {_target} is online:
+			if {_duration} >= 999 years:
+				kick {_target} due to formatted "{@server}%nl%%nl%{@error2}YOU WERE BANNED%nl%%nl%{@error2}Reason: &f%{_reason}%%nl%{@error2}Duration: &fPermanent%nl%{@error2}Banned by: &f%{_executorName}%%nl%%nl%"
+			else:
+				kick {_target} due to formatted "{@server}%nl%%nl%{@error2}YOU WERE BANNED%nl%%nl%{@error2}Reason: &f%{_reason}%%nl%{@error2}Duration: &f%getTimeString({_duration})%%nl%{@error2}Banned by: &f%{_executorName}%%nl%%nl%"
+
+		if {_duration} >= 999 years:
+			send "{@success}Permanently banned &f%{_target}% {@success2}for &f%{_reason}%{@success2}." to {_player}
+		else:
+			send "{@success}Banned &f%{_target}% {@success2}for &f%getTimeString({_duration})% {@success2}due to &f%{_reason}%{@success2}." to {_player}
+
+	# blist
+	else if {_type} is "blacklist":
+		if {punishments::%{_targetUuid}%::blacklist} is set:
+			send "{@error}That player already has an active blacklist!" to {_player}
+			stop
+
+		set {_totalBlacklists} to {punishments::%{_targetUuid}%::total-blacklists}
+		if {_totalBlacklists} is not set:
+			set {_totalBlacklists} to 0
+		add 1 to {_totalBlacklists}
+
+		set {punishments::%{_targetUuid}%::total-blacklists} to {_totalBlacklists}
+		set {punishments::%{_targetUuid}%::blacklist} to {_totalBlacklists}
+		set {punishments::%{_targetUuid}%::blacklist-%{_totalBlacklists}%::reason} to {_reason}
+		set {punishments::%{_targetUuid}%::blacklist-%{_totalBlacklists}%::duration} to {_duration}
+		set {punishments::%{_targetUuid}%::blacklist-%{_totalBlacklists}%::issuer} to {_playerUuid} if {_executorName} is not "Console" else "Console"
+		set {punishments::%{_targetUuid}%::blacklist-%{_totalBlacklists}%::issued-at} to now
+
+		loop all players where [{player::%uuid of input%::ips::*} contains {player::%{_targetUuid}%::ips::*}]:
+			add loop-player to {_affectedPlayers::*}
+
+		loop {_affectedPlayers::*}:
+			if {_duration} >= 999 years:
+				kick loop-value due to formatted "{@server}%nl%%nl%{@error2}YOUR IP HAS BEEN BLACKLISTED%nl%%nl%{@error2}Reason: &f%{_reason}%%nl%{@error2}Duration: &fPermanent%nl%%nl%"
+			else:
+				kick loop-value due to formatted "{@server}%nl%%nl%{@error2}YOUR IP HAS BEEN BLACKLISTED%nl%%nl%{@error2}Reason: &f%{_reason}%%nl%{@error2}Duration: &f%getTimeString({_duration})%%nl%%nl%"
+
+		if {_duration} >= 999 years:
+			send "{@success}Permanently blacklisted &f%{_target}% {@success2}for &f%{_reason}%{@success2}." to {_player}
+		else:
+			send "{@success}Blacklisted &f%{_target}% {@success2}for &f%getTimeString({_duration})% {@success2}due to &f%{_reason}%{@success2}." to {_player}
+
+
+	send formatted "<ttp:&fStaff: {@success2}%{_player}%%nl%&fPlayer: {@success2}%{_target}%%nl%&fPunishment: {@success2}%{_type}%%nl%&fDuration: {@success2}%{_duration}%%nl%&fReason: {@success2}%{_reason}%>&7[{@error2}MODERATION&7] &f%{_target}% &7was punished by &f%{_player}%. &aʜᴏᴠᴇʀ ꜰᴏʀ ᴍᴏʀᴇ" to all players where [input has permission "staff"]
+
+	create a new message and store it in {_msg}:
+
+		make embed and store it in {_embed}:
+			set title of embed to "PUNISHMENT"
+			set embed color of embed to color from hex code "#ff0000"
+			set the description of embed to ""
+			add inline field named "STAFF" with value "%{_player} ? "CONSOLE"% (%{_linkedStaff} ? "NOT LINKED"%)" to embed
+			add inline field named "TARGET" with value "%{_target}% (%{_linkedTarget} ? "NOT LINKED"%)" to embed
+			add inline field named "PUNISHMENT" with value "%{_type} in upper case%" to embed
+			if {_duration} >= 999 years:
+				add inline field named "DURATION" with value "N/A" to embed
+			else:
+				add inline field named "DURATION" with value "%{_duration}%" to embed
+			add inline field named "REASON" with value "%{_reason} in strict proper case%" to embed
+
+		add {_embed} to the embeds of the message
+
+	post {_msg} to channel with id {_dcID} and store it in {_msg}
+
+	create new thread named "%{_type} in proper case% | %{_target}%" in channel with id {_dcID} using the message {_msg} and store it in {_thread}
+	
+	
+	create a new message and store it in {_threadMsg}:
+		set the content of message to getLinkedUser( {_player} )
+		make embed and store it in {_embed}:
+			set title of embed to "PUNISHMENT"
+			set embed color of embed to color from hex code "#ff0000"
+			set the description of embed to "Please provide proof of the punishment here. If no proof is provided, the punishment may be revoked (if the target appeals), and the staff member may be punished.%nl%%nl%*Anything sent in this channel **may** be shared with the target.*"
+			add inline field named "STAFF" with value "%{_player}% (%{_linkedStaff}%)" to embed
+			add inline field named "TARGET" with value "%{_target}% (%{_linkedTarget}%)" to embed
+
+		add {_embed} to the embeds of the message
+
+	post {_threadMsg} to {_thread}
+
+# removals
+function handlePunishmentRemoval(player: Player, target: Offline Player, type: String, reason: String):
+	set {_playerUuid} to uuid of {_player}
+	set {_targetUuid} to uuid of {_target}
+	set {_executorName} to {_player} if {_player} is set else "Console"
+
+	if {_type} is "mute":
+		set {_muteId} to {punishments::%{_targetUuid}%::mute}
+		if {_muteId} is not set:
+			send "{@error}That player doesn't have an active mute!" to {_player}
+			stop
+
+		set {punishments::%{_targetUuid}%::mute-%{_muteId}%::removed-by} to {_playerUuid} if {_executorName} is not "Console" else "Console"
+		set {punishments::%{_targetUuid}%::mute-%{_muteId}%::removed-at} to now
+		set {punishments::%{_targetUuid}%::mute-%{_muteId}%::removal-reason} to {_reason}
+		delete {punishments::%{_targetUuid}%::mute}
+		send "{@success}Unmuted &f%{_target}% {@success2}for &f%{_reason}%{@success2}." to {_player}
+
+	if {_type} is "ban":
+		set {_banId} to {punishments::%{_targetUuid}%::ban}
+		if {_banId} is not set:
+			send "{@error}That player doesn't have an active ban!" to {_player}
+			stop
+
+		set {punishments::%{_targetUuid}%::ban-%{_banId}%::removed-by} to {_playerUuid} if {_executorName} is not "Console" else "Console"
+		set {punishments::%{_targetUuid}%::ban-%{_banId}%::removed-at} to now
+		set {punishments::%{_targetUuid}%::ban-%{_banId}%::removal-reason} to {_reason}
+		delete {punishments::%{_targetUuid}%::ban}
+		send "{@success}Unbanned &f%{_target}% {@success2}for &f%{_reason}%{@success2}." to {_player}
+
+	if {_type} is "blacklist":
+		set {_blacklistId} to {punishments::%{_targetUuid}%::blacklist}
+		if {_blacklistId} is not set:
+			send "{@error}That player doesn't have an active blacklist!" to {_player}
+			stop
+
+		set {punishments::%{_targetUuid}%::blacklist-%{_blacklistId}%::removed-by} to {_playerUuid} if {_executorName} is not "Console" else "Console"
+		set {punishments::%{_targetUuid}%::blacklist-%{_blacklistId}%::removed-at} to now
+		set {punishments::%{_targetUuid}%::blacklist-%{_blacklistId}%::removal-reason} to {_reason}
+		delete {punishments::%{_targetUuid}%::blacklist}
+		send "{@success}Unblacklisted &f%{_target}% {@success2}for &f%{_reason}%{@success2}." to {_player}
+
+# expiry check
+function checkPunishmentExpiry(player: Player, type: String):
+	set {_playerUuid} to uuid of {_player}
+	set {_punishmentId} to {punishments::%{_playerUuid}%::%{_type}%}
+
+	if {_punishmentId} is not set:
+		stop
+
+	set {_elapsedTime} to difference between now and {punishments::%{_playerUuid}%::%{_type}%-%{_punishmentId}%::issued-at}
+
+	if {_elapsedTime} > {punishments::%{_playerUuid}%::%{_type}%-%{_punishmentId}%::duration}:
+		set {punishments::%{_playerUuid}%::%{_type}%-%{_punishmentId}%::removed-at} to now
+		set {punishments::%{_playerUuid}%::%{_type}%-%{_punishmentId}%::expired} to true
+		delete {punishments::%{_playerUuid}%::%{_type}%}
+
+# history
+function mainHistory(player: Player, target: Offline Player):
+	create a gui with virtual chest inventory with 3 rows named "History — %{_target}%":
+		make gui slot (integers between 0 and 26) with black stained glass pane named " " without tooltip
+
+		make gui slot 9 with lime concrete named "{@c1}Warnings":
+			history({_player}, {_target}, "warning", 1)
+
+		make gui slot 11 with yellow concrete named "{@c2}Kicks":
+			history({_player}, {_target}, "kick", 1)
+
+		make gui slot 13 with orange concrete named "{@c2}Mutes":
+			history({_player}, {_target}, "mute", 1)
+
+		make gui slot 15 with red concrete named "{@error2}Bans":
+			history({_player}, {_target}, "ban", 1)
+
+		make gui slot 17 with black concrete named "{@error2}Blacklists":
+			history({_player}, {_target}, "blacklist", 1)
+
+		open last gui to {_player}
+
+function history(player: Player, target: Offline Player, type: String, page: Integer):
+	set {_index} to (({_page} - 1) * 27) + 1
+	set {_slot} to 0
+	set {_targetUuid} to uuid of {_target}
+
+	set {_maxPages} to round(ceil({punishments::%{_targetUuid}%::total-%{_type}%s} / 27))
+
+	if {_maxPages} is 0:
+		send "{@error}That player has no %{_type}%s on record." to {_player}
+		stop
+
+	if {_page} < 1:
+		send "{@error}You're already on the first page." to {_player}
+		stop
+
+	if {_page} > {_maxPages}:
+		send "{@error}You're already on the last page." to {_player}
+		stop
+
+	if {_type} is "warning":
+		set {_display} to "Warnings"
+	else if {_type} is "kick":
+		set {_display} to "Kicks"
+	else if {_type} is "mute":
+		set {_display} to "Mutes"
+	else if {_type} is "ban":
+		set {_display} to "Bans"
+	else if {_type} is "blacklist":
+		set {_display} to "Blacklists"
+
+	create a gui with virtual chest inventory with 4 rows named "%{_display}% — %{_target}% (%{_page}%/%{_maxPages}%)":
+		format gui slot (integers between 0 and 8) with black stained glass pane named " " without tooltip
+
+		format gui slot 4 with compass named "{@error2}Go Back" with lore "&7Click to return to" and "&7the previous menu":
+			mainHistory({_player}, {_target})
+
+		format gui slot 0 with arrow named "{@error2}◀ Previous Page":
+			history({_player}, {_target}, {_type}, {_page} - 1)
+
+		format gui slot 8 with arrow named "{@success2}Next Page ▶":
+			history({_player}, {_target}, {_type}, {_page} + 1)
+
+		loop 27 times:
+			if {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::issued-at} is not set:
+				add 1 to {_index}
+				continue
+
+			set {_executor} to "Console" if {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::issuer} is "Console" else ({punishments::%{_targetUuid}%::%{_type}%-%{_index}%::issuer} parsed as offline player)
+			set {_reason} to {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::reason}
+			set {_duration} to {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::duration}
+			set {_elapsedTime} to difference between now and {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::issued-at}
+			set {_remainingTime} to difference between {_elapsedTime} and {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::duration}
+			set {_displayDuration} to getTimeString({_duration}) if {_duration} < 999 years else "Permanent"
+
+			add "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" to {_lore::*}
+			add "&8| &7Issued By: &f%{_executor}%" to {_lore::*}
+			add "&8| &7Reason: &f%{_reason}%" to {_lore::*}
+			add "&8| &7Duration: &f%{_displayDuration}%" to {_lore::*}
+			add "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" to {_lore::*}
+
+			if {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::removed-at} is not set:
+				if {_duration} >= 999 years:
+					add "&8| {@error2}This is a permanent punishment." to {_lore::*}
+				else:
+					add "&8| {@c2}Expires in: &f%getTimeString({_remainingTime})%" to {_lore::*}
+				add "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" to {_lore::*}
+
+				format gui slot {_slot} + 9 with lime concrete named "{@c1}%{punishments::%{_targetUuid}%::%{_type}%-%{_index}%::issued-at}%" with lore {_lore::*}
+			else:
+				set {_removingExecutor} to "Console" if {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::removed-by} is "Console" else ({punishments::%{_targetUuid}%::%{_type}%-%{_index}%::removed-by} parsed as offline player)
+				set {_removalReason} to {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::removal-reason}
+				set {_removedAt} to {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::removed-at}
+
+				if {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::expired} is set:
+					add "&8| {@c2}Expired at: &f%{_removedAt}%" to {_lore::*}
+				else:
+					add "&8| &7Removed By: &f%{_removingExecutor}%" to {_lore::*}
+					add "&8| &7Removal Reason: &f%{_removalReason}%" to {_lore::*}
+					add "&8| &7Removed At: &f%{_removedAt}%" to {_lore::*}
+				add "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" to {_lore::*}
+
+				set {_material} to red concrete
+				if {punishments::%{_targetUuid}%::%{_type}%-%{_index}%::expired} is set:
+					set {_material} to orange concrete
+
+				format gui slot {_slot} + 9 with {_material} named "{@c1}%{punishments::%{_targetUuid}%::%{_type}%-%{_index}%::issued-at}%" with lore {_lore::*}
+
+			add 1 to {_index}
+			add 1 to {_slot}
+			delete {_lore::*}
+
+		open last gui to {_player}
+
+# alts
+function alts(player: Player, target: Offline Player, accounts: Strings, page: Integer):
+	set {_index} to (({_page} - 1) * 27) + 1
+	set {_slot} to 0
+	set {_targetUuid} to uuid of {_target}
+
+	set {_maxPages} to round(ceil(size of {_accounts::*} / 27))
+
+	if {_maxPages} is 0:
+		send "{@error}That player has never joined this server." to {_player}
+		stop
+
+	if {_page} < 1:
+		send "{@error}You're already on the first page." to {_player}
+		stop
+
+	if {_page} > {_maxPages}:
+		send "{@error}You're already on the last page." to {_player}
+		stop
+
+	create a gui with virtual chest inventory with 4 rows named "Alternates — %{_target}% (%{_page}%/%{_maxPages}%)":
+		format gui slot (integers between 0 and 8) with black stained glass pane named " " without tooltip
+
+		format gui slot 0 with arrow named "{@error2}◀ Previous Page":
+			alts({_player}, {_target}, {_accounts::*}, {_page} - 1)
+
+		format gui slot 8 with arrow named "{@success2}Next Page ▶":
+			alts({_player}, {_target}, {_accounts::*}, {_page} + 1)
+
+		format gui slot 4 with barrier named "{@error2}Close" with lore "&7Click to close this menu.":
+			close inventory of {_player}
+
+		loop 27 times:
+			if {_accounts::%{_index}%} is not set:
+				continue
+
+			set {_split::*} to split {_accounts::%{_index}%} by ";"
+			set {_ip} to {_split::1}
+			set {_alt} to {_split::2} parsed as offline player
+			set {_altUuid} to uuid of {_alt}
+
+			add "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" to {_lore::*}
+			add "&8Information:" to {_lore::*}
+			add " &8• &7Latest IP: &f%{_ip}%" to {_lore::*}
+			add " &8• &7Total IPs: &f%size of {player::%{_altUuid}%::ips::*}%" to {_lore::*}
+			add " &8• &7First IP Join: &f%{ip::%{_ip}%::first-join}%" to {_lore::*}
+			add " &8• &7First Account Join: &f%{player::%{_altUuid}%::first-join}%" to {_lore::*}
+
+			if {player::%{_targetUuid}%::latest-ip} is {_ip}:
+				add " &8• &7IP Match: {@success2}✔ Matching" to {_lore::*}
+			else:
+				add " &8• &7IP Match: {@error2}✘ Not Matching" to {_lore::*}
+
+			add "" to {_lore::*}
+			add "&8Punishments:" to {_lore::*}
+			add " &8• {@success2}Warnings: &f%{punishments::%{_altUuid}%::total-warnings} if {punishments::%{_altUuid}%::total-warnings} is set else 0%" to {_lore::*}
+			add " &8• {@c2}Kicks: &f%{punishments::%{_altUuid}%::total-kicks} if {punishments::%{_altUuid}%::total-kicks} is set else 0%" to {_lore::*}
+			add " &8• {@c2}Mutes: &f%{punishments::%{_altUuid}%::total-mutes} if {punishments::%{_altUuid}%::total-mutes} is set else 0% %"&a(Active)" if {punishments::%{_altUuid}%::mute} is set else ""%" to {_lore::*}
+			add " &8• {@error2}Bans: &f%{punishments::%{_altUuid}%::total-bans} if {punishments::%{_altUuid}%::total-bans} is set else 0% %"&a(Active)" if {punishments::%{_altUuid}%::ban} is set else ""%" to {_lore::*}
+			add " &8• {@error2}Blacklists: &f%{punishments::%{_altUuid}%::total-blacklists} if {punishments::%{_altUuid}%::total-blacklists} is set else 0% %"&a(Active)" if {punishments::%{_altUuid}%::blacklist} is set else ""%" to {_lore::*}
+			add "" to {_lore::*}
+			add "&8➥ {@c2}Left Click: &7View punishment history" to {_lore::*}
+			add "&8&m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" to {_lore::*}
+
+			format gui slot {_slot} + 9 with skull of {_alt} named "{@c1}%{_alt}%" with lore {_lore::*}:
+				mainHistory({_player}, {_alt})
+
+			add 1 to {_index}
+			add 1 to {_slot}
+			delete {_lore::*}
+
+		open last gui to {_player}
+
+# utils
+function parseTime(s: string) :: timespan:
+	replace all "d" with " day" in {_s}
+	replace all "s" with " second" in {_s}
+	replace all "m" with " minute" in {_s}
+	replace all "h" with " hour" in {_s}
+	return ("%{_s}%" parsed as timespan)
+
+function getTimeString(input: timespan) :: string:
+	set {_now} to now
+	add {_input} to {_now}
+	set {_time} to unix timestamp of {_now}
+	remove (unix timestamp of now) from {_time}
+
+	set {_days} to floor({_time} / 86400)
+	set {_hours} to floor(mod({_time} / 3600, 24))
+	set {_minutes} to floor(mod({_time} / 60, 60))
+	set {_seconds} to floor(mod({_time} / 1, 60))
+
+	set {_string} to ""
+
+	if {_days} > 0:
+		set {_string} to "%{_days}% day" if {_days} is 1 else "%{_days}% days"
+	if {_hours} > 0:
+		if {_string} != "":
+			set {_string} to "%{_string}% %{_hours}% hour" if {_hours} is 1 else "%{_string}% %{_hours}% hours"
+		else:
+			set {_string} to "%{_hours}% hour" if {_hours} is 1 else "%{_hours}% hours"
+	if {_minutes} > 0:
+		if {_string} != "":
+			set {_string} to "%{_string}% %{_minutes}% minute" if {_minutes} is 1 else "%{_string}% %{_minutes}% minutes"
+		else:
+			set {_string} to "%{_minutes}% minute" if {_minutes} is 1 else "%{_minutes}% minutes"
+	if {_seconds} > 0:
+		if {_string} != "":
+			set {_string} to "%{_string}% %{_seconds}% second" if {_seconds} is 1 else "%{_string}% %{_seconds}% seconds"
+		else:
+			set {_string} to "%{_seconds}% second" if {_seconds} is 1 else "%{_seconds}% seconds"
+
+	return {_string}

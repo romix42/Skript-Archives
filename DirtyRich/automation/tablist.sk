@@ -1,0 +1,80 @@
+options:
+	prefix: <##FFFF28>&lD<##FFFF3B>&lI<##FFFF4E>&lR<##FFFF61>&lT<##FFFF74>&lY<##FFFF61>&lR<##FFFF4E>&lI<##FFFF3B>&lC<##FFFF28>&lH
+	server ip: &7ᴅɪʀᴛʏʀɪᴄʜ.ᴍɪɴᴇʜᴜᴛ.ɢɢ
+
+
+on join:
+	set {-lastGroup::%player's uuid%} to group of player
+	#set player's tab list footer to "%nl%    <##28ABFF>&lD<##42B5FF>&lI<##5CBFFF>&lS<##76C9FF>&lC<##5CBFFF>&lO<##42B5FF>&lR<##28ABFF>&lD &8➜ <##28ABFF>&l/DISCORD    %nl%%nl%{@server ip}%nl%"
+	while player is online:
+
+		set component player list footer of player to minimessage from "<br><br>    <reset><white><sprite:items:item/amethyst_shard> <reset><#96bfff>/ᴅɪꜱᴄᴏʀᴅ <reset><white><sprite:items:item/amethyst_shard>    <br>    <reset><white><sprite:items:item/diamond> <reset><#fff78a>%online player count% <reset><gray>ᴏɴʟɪɴᴇ <reset><white><sprite:items:item/diamond>    <reset><white><sprite:blocks:block/redstone_torch> <reset><#fff78a>%player's ping% <gray>ᴍꜱ <reset><white><sprite:blocks:block/redstone_torch>    <br>"
+		set component player list header of player to minimessage from "    <br><reset><white><sprite:items:item/golden_shovel>  %formatToMiniMessage(raw "{@prefix}")%  <reset><white><sprite:items:item/golden_shovel><br><br>    "
+
+
+		#set player's tab list header to "%nl%{@prefix}%nl%%nl%&7(%online player count% ONLINE)%nl%"
+		if "%{-lastGroup::%player's uuid%}%" != "%group of player%":
+			addTeam(player)
+			set {-lastGroup::%player's uuid%} to group of player
+
+		if "%player's suffix%" = "", " " or "<none>":
+			set player's tablist name to "%player's prefix% %player% %player's suffix%"
+		else:
+			set player's tablist name to "%player's prefix% %player%"
+		wait 1 seconds
+
+on load:
+	clear {-teamPos::*}
+	addTeamPosition("aaa", "owner", light cyan)
+	addTeamPosition("aab", "developer", light purple)
+	addTeamPosition("abb", "sr-mod", orange)
+	addTeamPosition("acc", "mod", orange)
+	addTeamPosition("add", "jr-mod", orange)
+	addTeamPosition("bab", "rich", lime)
+	addTeamPosition("bbb", "sand", yellow)
+	addTeamPosition("ccc", "mummy", white)
+	addTeamPosition("ddd", "viper", cyan)
+	addTeamPosition("eee", "dune", lime)
+	addTeamPosition("fff", "dust", pink)
+	addTeamPosition("ggg", "linked", white)
+	addTeamPosition("zzz", "default", white)
+
+function addTeamPosition(position: string, rank: string, color: color):
+	add {_rank} to {-teamPos::*}
+	set {-teamPos::%{_rank}%::pos} to {_position}
+	set {-teamPos::%{_rank}%::color} to {_color}
+
+function getTeamPosition(p: player):: string:
+	loop {-teamPos::*}:
+		set {_rank} to loop-value
+		if group of {_p} = {_rank}:
+			return {-teamPos::%{_rank}%::pos}
+
+	return "zzz"
+
+function getTeamColor(p: player):: color:
+	loop {-teamPos::*}:
+		set {_rank} to loop-value
+		if group of {_p} = {_rank}:
+			return {-teamPos::%{_rank}%::color}
+
+	return white
+
+function addTeam(p: player):
+	delete team of {_p}
+	set {_prefix} to getTeamPosition({_p})
+	set {_team} to team named "%{_prefix}%-%{_p}%-%{_p}'s uuid%"
+
+	set team option collision rule of {_team} to never
+	set team prefix of {_team} to "%{_p}'s prefix% §c"
+	set team color of {_team} to getTeamColor({_p})
+	if "%{_p}'s suffix%" != "", " " or "<none>":
+		set team suffix of {_team} to " %{_p}'s suffix%"
+
+	add {_p} to {_team}
+
+on quit:
+	delete team of player
+
+on connect:
+	addTeam(player)

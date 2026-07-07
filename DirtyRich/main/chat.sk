@@ -1,0 +1,249 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+	regex link: "(?i)(?:https?|ftps?|sftp|hxxps?)://|www\d*[.\[(]|discord[.\[(]gg|(?:\d{1,3}\.){3}\d{1,3}(?::\d{1,5})?|\b[a-zA-Z0-9-]{2,}\.(?:com|net|org|io|gg|me|xyz|co|tv|app|dev|ly|ru|uk|us|ca|de|fr|to|sh|in|store|shop|link|site|live|click|online|info|biz)\b"
+	fix: ]] # only for vscode
+	regex blocked-words: "(?i)\b(n[i1!|]+gg[e3]r|n[i1!]+gg[a@]|ch[i1]nk|sp[i1]ck?|k[i1]k[e3]|g[o0][o0]k|w[e3]tb[a@]ck|c[o0][o0]n|c[u*][n*]t|[a@]n[a@]l|b[e3][a@]st[i1][a@]|p[e3]d[o0]|l[o0]l[i1](c[o0]n)?|sh[o0]t[a@]|p[o0]rn|s[e3]x|h[e3]nt[a@][i1]|r[a@]p[e3][ds]?|h[i1]tl[e3]r|st[a@]l[i1]n|m[u*][s$]s[o0]l[i1]n[i1]|p[o0]l\s?p[o0]t|[i1]d[i1]\s?[a@]m[i1]n|m[a@][o0]\s?z[e3]d[o0]ng)\b" 
+
+function sendModerationAlert(p: player, msg: string, type: string):
+	send "&7[{@error2}ALERT&7] &f%{_p}%&7's message contains a link: &c%{_msg}%"         to all players where [input has permission "staff"] if {_type} = "link"
+	send "&7[{@error2}ALERT&7] &f%{_p}%&7's message contains a bad word: &c%{_msg}%"     to all players where [input has permission "staff"] if {_type} = "bad-word"
+	send "&7[{@error2}ALERT&7] &f%{_p}%&7's message contains too many caps: &c%{_msg}%"  to all players where [input has permission "staff"] if {_type} = "caps"
+
+on chat:
+	set {_start} to now
+	if player isn't op:
+		if message partially matches {@regex blocked-words}:
+			send "{@error}Your message contains a bad word!"
+			sendModerationAlert(player, message, "bad-word")
+			cancel event
+			stop
+
+		if message partially matches {@regex link}:
+			send "{@error}Your message contains a link!"
+			sendModerationAlert(player, message, "link")
+			cancel event
+			stop
+
+		if length of message > 6:
+			set {_upper} to number of uppercase chars in message
+			if {_upper} * 100 / length of message >= 70:
+				send "{@error}Your message contains too many CAPS!"
+				sendModerationAlert(player, message, "caps")
+				cancel event
+				stop
+
+
+	set the message to "%message% "
+	checkPunishmentExpiry(player, "mute")
+
+	set {_muteId} to {punishments::%uuid of player%::mute}
+
+	if {_muteId} is set:
+		if {punishments::%uuid of player%::mute-%{_muteId}%::duration} >= 999 years:
+			send "" to player
+			send "{@error2}You are muted for &f%{punishments::%uuid of player%::mute-%{_muteId}%::reason}%{@error2}." to player
+			send "" to player
+		else:
+			set {_elapsedTime} to difference between now and {punishments::%uuid of player%::mute-%{_muteId}%::issued-at}
+			set {_remainingTime} to difference between {_elapsedTime} and {punishments::%uuid of player%::mute-%{_muteId}%::duration}
+			send "" to player
+			send "{@error2}You are muted for another &f%getTimeString({_remainingTime})% {@error2}due to &f%{punishments::%uuid of player%::mute-%{_muteId}%::reason}%{@error2}." to player
+			send "" to player
+		cancel event
+		stop
+
+	if event is canceled:
+		stop
+	if {-punishing::%player's uuid%::active} is true:
+		stop
+
+	cancel event
+
+	if {-lastMsg::%player's uuid%} is set:
+		if player doesn't have permission "staff":
+			if player doesn't have permission "noChatDelay":
+				if difference between now and {-lastMsg::%player's uuid%} < 1.5 seconds:
+					send "{@error}You need to wait &f%1.5 seconds - difference between now and {-lastMsg::%player's uuid%}%{@error2}!"
+					stop
+			else:
+				if difference between now and {-lastMsg::%player's uuid%} < 0.25 seconds:
+					send "{@error}You need to wait &f%0.25 seconds - difference between now and {-lastMsg::%player's uuid%}%{@error2}!"
+					stop
+
+	set {-lastMsg::%player's uuid%} to now
+
+	if message in lowercase partially matches "\s*\b(hi|welcome|hello)\b\s*":
+		if isWelcomeAvailable(player) = true:
+			if size of {-welcomeList::*} <= 2:
+				add 0.35 to player's honey
+				send "{@success2}+&f0.35 {@c1}&lHONEY" to player
+			else:
+				add 0.25 to player's honey
+				send "{@success2}+&f0.25 {@c1}&lHONEY" to player
+
+	run 0 ticks later:
+		if player has permission "staff":
+			set {_color2} to "&f"
+		else if hasRank(player) = true:
+			set {_color2} to "<##c9c9c9>"
+		else:
+			set {_color2} to "<##aaaaaa>"
+
+		if player has permission "staff":
+			set {_msg} to formatChat(player, formatToMiniMessage(raw message), {_color2})
+		else:
+			set {_msg} to formatChat(player, "%raw message%".replaceAll("<[^>]+>", ""), {_color2})
+
+		if "%player's suffix%" = "", " " or "<none>":
+			set {_prefixStr} to formatToMiniMessage(raw "%raw player's prefix% %raw player's displayname% &8» %{_color2}%")
+		else:
+			set {_prefixStr} to formatToMiniMessage(raw "%raw player's prefix% %raw player's displayname% %raw player's suffix% &8» %{_color2}%")
+		
+		send component merge components (mini message from "<head:%player's uuid%:true> %{_prefixStr}%") and {_msg} to all players if "%player%" doesn't start with "."
+		send component merge components (mini message from "<head:413df8ce-10cf-49f5-9683-f04ad4d573f6> %{_prefixStr}%") and {_msg} to all players if "%player%" starts with "."
+
+		set {_msgDiscord} to unformatted {_msg}
+		set {_msgDiscord} to {_msgDiscord}.replaceAll("(>|\|\||~~|#|__|\*|`|\\|@everyone|@here|(<)?@(&|!)?[0-9]{18}(>)?)", "")
+		post "%unformatted player's prefix% %player% » %{_msgDiscord}%" to channel with id "1495812568051355689"
+
+function formatToMiniMessage(txt: string) :: string:
+	# custom hex
+	set {_txt} to {_txt}.replaceAll(raw "<##([a-zA-Z0-9]{6})>", raw "<#$1>")
+
+	# clicky clicks
+	set {_txt} to {_txt}.replaceAll(raw "<(ttp|tooltip):(.*?)>",    raw "<hover:show_text:'$2'>")
+	set {_txt} to {_txt}.replaceAll(raw "<(cmd|command):(.*?)>",    raw "<click:run_command:'$2'>")
+	set {_txt} to {_txt}.replaceAll(raw "<(copy):(.*?)>",           raw "<click:copy_to_clipboard:'$2'>")
+	set {_txt} to {_txt}.replaceAll(raw "<(sgt):(.*?)>",            raw "<insert:'$2'>")
+	set {_txt} to {_txt}.replaceAll(raw "<(url|link):(.*?)>",       raw "<click:open_url:'$2'>")
+
+	# colors
+	set {_txt} to {_txt}.replaceAll(raw "&0", raw "<reset><black>")
+	set {_txt} to {_txt}.replaceAll(raw "&1", raw "<reset><dark_blue>")
+	set {_txt} to {_txt}.replaceAll(raw "&2", raw "<reset><dark_green>")
+	set {_txt} to {_txt}.replaceAll(raw "&3", raw "<reset><dark_aqua>")
+	set {_txt} to {_txt}.replaceAll(raw "&4", raw "<reset><dark_red>")
+	set {_txt} to {_txt}.replaceAll(raw "&5", raw "<reset><dark_purple>")
+	set {_txt} to {_txt}.replaceAll(raw "&6", raw "<reset><gold>")
+	set {_txt} to {_txt}.replaceAll(raw "&7", raw "<reset><gray>")
+	set {_txt} to {_txt}.replaceAll(raw "&8", raw "<reset><dark_gray>")
+	set {_txt} to {_txt}.replaceAll(raw "&9", raw "<reset><blue>")
+	set {_txt} to {_txt}.replaceAll(raw "&a", raw "<reset><green>")
+	set {_txt} to {_txt}.replaceAll(raw "&b", raw "<reset><aqua>")
+	set {_txt} to {_txt}.replaceAll(raw "&c", raw "<reset><red>")
+	set {_txt} to {_txt}.replaceAll(raw "&d", raw "<reset><light_purple>")
+	set {_txt} to {_txt}.replaceAll(raw "&e", raw "<reset><yellow>")
+	set {_txt} to {_txt}.replaceAll(raw "&f", raw "<reset><white>")
+
+	# text formats
+	set {_txt} to {_txt}.replaceAll(raw "&l", raw "<b>")
+	set {_txt} to {_txt}.replaceAll(raw "&k", raw "<obf>")
+	set {_txt} to {_txt}.replaceAll(raw "&m", raw "<st>")
+	set {_txt} to {_txt}.replaceAll(raw "&o", raw "<italic>")
+	set {_txt} to {_txt}.replaceAll(raw "&n", raw "<u>")
+	set {_txt} to {_txt}.replaceAll(raw "&r", raw "<reset>")
+
+	return {_txt}
+
+
+function formatChat(p: player, txt: string, color: string) :: text component:
+	set {_color} to raw formatToMiniMessage( raw {_color} )
+	set {_txt} to {_txt}.replaceAll(raw "^\./(.*)","/$1")
+	set {_txt} to "%raw {_color}%%raw {_txt}%"
+
+	# /mh
+	set {_fav::*} to "/mh", "/minehut", "/lobby", "/hub", "/fav", "/favorite"
+	set {_fav} to "/favourite"
+	if raw {_txt} contains {_fav::*} or {_fav}:
+		replace all {_fav::*} and {_fav} in {_txt} with "<fav>"
+		set {_favComp} to mini message from "<white>Click to run command."
+		set {_r2} to mini message from "<#ffff28>/fav%raw {_color}%"
+		set hover event of {_r2} to a new hover event showing {_favComp}
+		set click event of {_r2} to a new click event to run command "/fav"
+		set {_fav} to resolver("fav", {_r2})
+
+	# /store
+	if raw {_txt} contains "/store", "/buy" or "/shop":
+		replace all "/store", "/buy", "/shop" in {_txt} with "<store>"
+		set {_comp} to mini message from "<white>Click to run command."
+		set {_r} to mini message from "<#ffff28>/store%raw {_color}%"
+		set hover event of {_r} to a new hover event showing {_comp}
+		set click event of {_r} to a new click event to run command "/store"
+		set {_store} to resolver("store", {_r})
+
+	# ping
+	loop all players:
+		if {_txt} contains "@%loop-player%":
+			replace all "@%loop-player%" in {_txt} with raw "<#ffff28>@<white><head:%loop-player's uuid%:true> <#ffff28>%loop-player%<reset>%raw {_color}%"
+			play sound "block.note_block.pling" to loop-player
+		else if {_txt} contains "%loop-player%":
+			replace all "%loop-player%" in {_txt} with raw "<#ffff28>@<white><head:%loop-player's uuid%:true> <#ffff28>%loop-player%<reset>%raw {_color}%"
+			play sound "block.note_block.pling" to loop-player
+
+	# [item]
+	if {_p}'s tool != air:
+		if {_txt} contains "[i]", "[item]", "[hand]", "[tool]", "[h]" or "[t]":
+			replace all raw "[i]", raw "[item]", raw "[hand]", raw "[tool]", raw "[h]", raw "[t]" in {_txt} with "<item>"
+
+			if name of {_p}'s tool is set:
+				set {_name} to formatToMiniMessage(raw "%name of {_p}'s tool%")
+
+			else if component item name of {_p}'s tool is set:
+				set {_name} to formatCompName({_p}'s tool)
+
+			else:
+				set {_name} to formatToMiniMessage(raw "%type of {_p}'s tool%") 
+
+
+			set {_type} to "%type of {_p}'s tool%" in lower snake case
+			set {_amount} to raw "{@success2}%amount of {_p}'s tool ? 1%x" if paper tags of {_p}'s tool doesn't contain paper tag "shovels"
+			set {_amount} to raw "<reset><white><sprite:items:item/%{_type}%>" if paper tags of {_p}'s tool contains paper tag "shovels"
+
+			set {_t} to mini message from formatToMiniMessage(raw "&8[%raw {_amount}% &f%raw {_name}%&8]<reset>%raw {_color}%")
+			set hover event of {_t} to a new hover event showing {_p}'s tool
+			set {_item} to resolver("item", {_t})
+
+	# :yes:
+	replace all ":yes:" and ":y:" in {_txt} with raw "<sprite:gui:icon/checkmark>"
+
+	# :no:
+	replace all ":no:" in {_txt} with raw "<sprite:gui:player_list/remove_player>"
+
+	# [bal]
+	replace all raw "[bal]", raw "[balance]", raw "[money]", raw "[$]" and raw "[$$$]" in {_txt} with raw "<gray>[<white><sprite:items:item/emerald> {@success2}$%format({_p}'s balance)%<gray>]<reset>%raw {_color}%"
+
+	# [honey]
+	replace all raw "[honey]" in {_txt} with raw "<gray>[<white><sprite:items:item/honey_bottle> <#ffb516>%format({_p}'s honey)% HONEY<gray>]<reset>%raw {_color}%"
+
+	# [playtime]
+	replace all raw "[pt]", "[time]", "[playtime]" in {_txt} with raw "<gray>[<white><sprite:items:item/clock_01> {@c1}<#eeff34>%formatTime(play_one_minute stat for {_p})%<gray>]<reset>%raw {_color}%"
+
+	# [mined]
+	replace all raw "[mine]", "[mine]", "[blocks]", "[mined]", "[block]" in {_txt} with raw "<gray>[<white><sprite:items:item/diamond_pickaxe> {@c1}<##f7ff81>%format(mine_block stat using sand for {_p})%<gray>]<reset>%raw {_color}%"
+
+	# return
+	if any:
+		{_fav} is set
+		{_item} is set
+		{_store} is set
+	then:
+		return mini message from raw {_txt} with {_item}, {_fav} and {_store}
+	else:
+		return mini message from raw {_txt}
+
+
+function formatCompName(item: item):: string:
+	set {_name} to raw component item name of {_item}
+	set {_name} to {_name}.replaceAll("\[(.+)\/(.+)\@(.+)]", "<sprite:$3:$1/$2>")
+
+	return raw {_name}

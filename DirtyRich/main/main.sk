@@ -1,0 +1,199 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+import:
+	net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+	org.bukkit.craftbukkit.entity.CraftPlayer
+	
+	com.viaversion.viaversion.api.Via
+	com.viaversion.viaversion.api.protocol.version.ProtocolVersion
+
+expression:
+	patterns:
+		%offline player%'s honey
+		honey of %offline player%
+	return type: number 
+	get:
+		return {honey::%expression-1's uuid%} ? 0
+	set:
+		send "%expression-1%'s honey was changed | %{honey::%expression-1's uuid%}% -> %change value%" to console
+		set {honey::%expression-1's uuid%} to change value
+	add:
+		send "%expression-1%'s honey was changed | %{honey::%expression-1's uuid%}% -> %{honey::%expression-1's uuid%} + change value %" to console
+		add change value to {honey::%expression-1's uuid%}
+	remove:
+		send "%expression-1%'s honey was changed | %{honey::%expression-1's uuid%}% -> %{honey::%expression-1's uuid%} - change value%" to console
+		remove change value from {honey::%expression-1's uuid%}
+	reset:
+		send "%expression-1%'s honey was changed | %{honey::%expression-1's uuid%}% -> 0" to console
+		set {honey::%expression-1's uuid%} to 0
+	delete:
+		send "%expression-1%'s honey was changed |%{honey::%expression-1's uuid%}% -> 0" to console
+		set {honey::%expression-1's uuid%} to 0
+
+expression:
+	patterns:
+		%offline player%'s prestige
+		prestige of %offline player%
+	return type: number 
+	get:
+		return {prestige::%expression-1's uuid%} ? 0
+	set:
+		set {prestige::%expression-1's uuid%} to change value
+	add:
+		add change value to {prestige::%expression-1's uuid%}
+	remove:
+		remove change value from {prestige::%expression-1's uuid%}
+	reset:
+		set {prestige::%expression-1's uuid%} to 0
+	delete:
+		set {prestige::%expression-1's uuid%} to 0
+
+on exit bound with id "spawn":
+	player isn't op
+	set {_loc} to location of player
+	log "%nl%===================%nl%%player% LEFT SPAWN%nl%LOCATION: %x of {_loc}%, %y of {_loc}%, %z of {_loc}%%nl%GAMEMODE: %player's gamemode%%nl%RANK: %unformatted player's prefix%%nl%===================%nl%" to file "exit.log"
+	send "A player has left the spawn bound" to console
+	teleport player to {spawn}
+
+on enter bound with id "sell":
+	hide(player)
+
+on exit bound with id "sell":
+	reveal(player)
+
+on first join:
+	clear {-welcomeList::*}
+	set {-welcome} to now
+	set {-welcomeList::*} to player
+
+function hide(p: player):
+	loop all players:
+		loop-player is not {_p}
+		bound at loop-player contains bound with id "sell"
+		set {_id} to loop-value.getEntityId()
+		set {_packet} to new ClientboundRemoveEntitiesPacket({_id})
+		{_p}.getHandle().connection.send({_packet})
+
+function reveal(p: player):
+	set {_sk} to (instance of plugin "Skript")
+	loop all players:
+		{_p}.hideEntity({_sk},loop-player)
+		{_p}.showEntity({_sk},loop-player)
+
+function isWelcomeAvailable(p: player):: boolean:
+	return false if {-welcome} isn't set
+
+	if difference between now and {-welcome} < 6 seconds:
+		if {-welcomeList::*} doesn't contain {_p}:
+			add {_p} to {-welcomeList::*}
+			return true
+		else:
+			return false
+	else:
+		delete {-welcome}
+		return false
+
+expression [the] true version of %player%:
+	get:
+		set {_api} to Via.getAPI()
+		set {_uuid} to expr-1.getUniqueId()
+		set {_protocolId} to {_api}.getPlayerVersion({_uuid})
+		#set {_version} to ProtocolVersion.getProtocol({_protocolId})
+		return {_protocolId}
+
+on join:
+	if the true version of player < 773:
+		wait 5 ticks
+
+		send "{@error}ʏᴏᴜʀ ᴍɪɴᴇᴄʀᴀꜰᴛ ᴠᴇʀꜱɪᴏɴ ᴅᴏᴇꜱɴ'ᴛ ꜱᴜᴘᴘᴏʀᴛ ᴛʜɪꜱ ꜱᴇʀᴠᴇʀ"
+		send "{@error}ᴘʟᴇᴀꜱᴇ ᴊᴏɪɴ ᴡɪᴛʜ ᴠᴇʀꜱɪᴏɴ &l1.21.9+&r"
+		send ""
+		send "{@error}ʏᴏᴜ ᴀʀᴇ ᴀʙʟᴇ ᴛᴏ ᴘʟᴀʏ ᴛʜɪꜱ ꜱᴇʀᴠᴇʀ, ʙᴜᴛ ʏᴏᴜ ᴡᴏɴ'ᴛ ʜᴀᴠᴇ ᴛʜᴇ ꜱᴀᴍᴇ ᴇxᴘᴇʀɪᴇɴᴄᴇ"
+	
+	if "%player%" starts with ".":
+		wait 5 ticks
+
+		send "{@error}ʏᴏᴜʀ ᴍɪɴᴇᴄʀᴀꜰᴛ ᴇᴅɪᴛɪᴏɴ ᴅᴏᴇꜱɴ'ᴛ ꜱᴜᴘᴘᴏʀᴛ ᴛʜɪꜱ ꜱᴇʀᴠᴇʀ"
+		send "{@error}ᴘʟᴇᴀꜱᴇ ᴊᴏɪɴ ᴡɪᴛʜ &f&lᴊᴀᴠᴀ&r {@error2}ᴇᴅɪᴛɪᴏɴ"
+		send ""
+		send "{@error}ʏᴏᴜ ᴀʀᴇ ᴀʙʟᴇ ᴛᴏ ᴘʟᴀʏ ᴛʜɪꜱ ꜱᴇʀᴠᴇʀ, ʙᴜᴛ ʏᴏᴜ ᴡᴏɴ'ᴛ ʜᴀᴠᴇ ᴛʜᴇ ꜱᴀᴍᴇ ᴇxᴘᴇʀɪᴇɴᴄᴇ"
+
+		
+on load:
+	delete {-stopping}
+
+on command "/stop":
+	cancel event
+	set {-stopping} to true
+	kick all players due to "{@error2}The server is &lRESTARTING{@error2}."
+	console command "save-all"
+	create a new container with unique id 50 and store it in {_container}:
+		create a new container section and store it in {_section}:
+			add "%nl%:red_circle: Server stopped." to content of the section
+
+			set accessory of the section to (new thumbnail with source (file upload from url "https://i.imgur.com/tUTrFao.png"))
+		add {_section} to content of the container
+	post {_container} to channel with id "1495812568051355689"
+	wait 5 ticks
+	stop the server
+
+on connect:
+	if {-stopping} = true:
+		kick player due to "{@error2}The server is &lRESTARTING{@error2}."
+	
+	if server is whitelisted:
+		if player isn't whitelisted:
+			set {_notes} to ""
+			if {_notes} != "":
+				kick player due to "%nl%{@error2}The server is in maintenance!%nl%{@error2}Notes: &f%{_notes}%"
+			else:
+				kick player due to "%nl%{@error2}The server is in maintenance!"
+
+function prefixOfPlayer(p: offlineplayer) :: string:
+	set {_group} to "%{_p}'s group%"
+	return "&7[<#28abff>&lOWNER&7]<#b5e3ff>"  if {_group} = "owner"
+	return "&7[<#ffff28>&lSR MOD&7]<#ffff74>" if {_group} = "sr-mod"
+	return "&7[<#ffff28>&lMOD&7]<#ffff74>"    if {_group} = "mod"
+	return "&7[<#ffff28>&lJR MOD&7]<#ffff74>" if {_group} = "jr-mod"
+	return "&7[<#16ffa7>&lMINEHUT&7]&7"       if {_group} = "minehut"
+	return "&7[<#ffff28>&lSAND&7]<#ffffaa>"   if {_group} = "sand"
+	return "&7[<#c29028>&lMUMMY&7]<#e1c17d>"  if {_group} = "mummy" 
+	return "&7[<#28b8c2>&lVIPER&7]<#7ed9df>"  if {_group} = "viper" 
+	return "&7[<#bcc228>&lDUNE&7]<#dcdf80>"   if {_group} = "dune"  
+	return "&7[<#c22881>&lDUST&7]<#dc80b5>"   if {_group} = "dust"  
+	return "&7[<#3fc2ff>✔&7]"                if {_group} = "linked"
+	return "&7[<#8d8d8d>&lPLAYER&7]&7"
+
+command /playtime [<offline player>]:
+	description: View someone's playtime.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/playtime [player]
+	prefix: {@cmd-prefix}
+	trigger:
+		set {_p} to arg-1 ? player
+		send component mini message from formatToMiniMessage(raw "{@prefix}<sprite:items:item/clock_00> Playtime of {@success2}%{_p}%&f: <##eeff34>%formatTime(play_one_minute stat for {_p})%") to player
+
+function hideAttributes(i: item) :: item:
+	apply attribute modifier to {_i}:
+		id: "my_mod:scale"
+		attribute: scale
+		amount: 0.0
+		slot: feet_slot_group
+		operation: add_number
+	add hide attributes to item flags of {_i}
+	add hide enchantments to item flags of {_i}
+	add hide unbreakable to item flags of {_i}
+	return {_i}
+
+

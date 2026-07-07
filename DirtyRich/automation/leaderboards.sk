@@ -1,0 +1,130 @@
+import:
+	me.yic.xconomy.api.XConomyAPI
+	de.oliver.fancynpcs.api.FancyNpcsPlugin
+	de.oliver.fancyholograms.api.FancyHologramsPlugin
+	net.luckperms.api.LuckPermsProvider
+	java.util.ArrayList
+	java.util.Arrays
+
+
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	server: <##FFFF28>&lD<##FFFF3B>&lI<##FFFF4E>&lR<##FFFF61>&lT<##FFFF74>&lY<##FFFF61>&lR<##FFFF4E>&lI<##FFFF3B>&lC<##FFFF28>&lH
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+function hasPlayed(p: offline player):: boolean:
+	if {_p} has played before:
+		return true
+	if {_p} is online:
+		return true
+	return false
+
+command /bal [<offline player>]:
+	description: See a player's balance.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/bal <player>
+	prefix: {@cmd-prefix}
+	aliases: /balance, /money
+	trigger:
+		set {_player} to arg-1 ? player
+		if hasPlayed({_player}) = false:
+			send "{@error}Player not found!" to player
+			stop
+		send "{@prefix}%{_player}%'s balance: {@success2}$%format({_player}'s balance)%" to player
+
+command /baltop:
+	description: See the baltop.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/baltop
+	prefix: {@cmd-prefix}
+	aliases: /balancetop
+	trigger:
+		set {_top} to "%(new XConomyAPI()).getbalancetop()%"
+		replace all "[", "]" in {_top} with ""
+		set {_topSplit::*} to {_top} split at ", "
+		send component mini message from "<gradient:#555555:#AAAAAA><st>" + " ".repeat(15) + "</st></gradient>" + formatToMiniMessage(raw "<reset> {@success2}&lBALTOP<reset> ") + "<gradient:#AAAAAA:#555555><st>" + " ".repeat(15) + "</st></gradient>"
+
+		loop {_topSplit::*}:
+			if loop-counter > 10:
+				exit loop
+
+			send "{@c1}&l#%loop-counter% &7- {@success2}%loop-value% &7- {@c2}$%format((loop-value parsed as offline player)'s balance)%" if hasPlayed(loop-value parsed as offline player) = true
+			send "{@c1}&l#%loop-counter% &7- {@success2}Unknown Player &7- {@c2}$%format((loop-value parsed as offline player)'s balance)%" if hasPlayed(loop-value parsed as offline player) = false
+
+		send component mini message from "<gradient:#555555:#AAAAAA:#555555><st>" + " ".repeat(42)
+
+command /honeytop:
+	description: See the honeytop.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/honeytop
+	prefix: {@cmd-prefix}
+	trigger:
+		send component mini message from "<gradient:#555555:#AAAAAA><st>" + " ".repeat(15) + "</st></gradient>" + formatToMiniMessage(raw "<reset> {@success2}&lHONEYTOP<reset> ") + "<gradient:#AAAAAA:#555555><st>" + " ".repeat(15) + "</st></gradient>"
+		set {_topSplit::*} to sorted indices of {honey::*} in descending order
+		loop {_topSplit::*}:
+			if loop-counter > 10:
+				exit loop
+
+			send "{@c1}&l#%loop-counter% &7- {@success2}%loop-value parsed as offline player% &7- {@c2}%format((loop-value parsed as offline player)'s honey)% HONEY" if hasPlayed(loop-value parsed as offline player) = true
+			send "{@c1}&l#%loop-counter% &7- {@success2}Unknown Player &7- {@c2}%format((loop-value parsed as offline player)'s honey)% HONEY" if hasPlayed(loop-value parsed as offline player) = false
+
+		send component mini message from "<gradient:#555555:#AAAAAA:#555555><st>" + " ".repeat(42)
+
+on load:
+	refreshHoneyTop()
+
+every 10 minutes:
+	console command "save-all"
+	refreshHoneyTop()
+
+on command "save-all":
+	set {dataVer} to 0 if {dataVer} isn't set
+	add 1 to {dataVer}
+	send formatted "<ttp:&fSaved at: &7%now formatted as "HH:mm:ss z"%%nl%&fData version: &7%{dataVer}%>{@success2}ᴅᴀᴛᴀ ꜱᴀᴠᴇᴅ" to all players
+
+function refreshHoneyTop():
+	set {_honey::*} to sorted indices of {honey::*} in descending order
+
+	set {_prefix} to prefixOfPlayer( {_honey::1} parsed as offline player )
+
+	set {_username} to {_honey::1} parsed as offline player if hasPlayed({_honey::1} parsed as offline player) = true
+	set {_username} to "Unknown Player" if hasPlayed({_honey::1} parsed as offline player) = false
+
+	set {_holoOptional} to FancyHologramsPlugin.get().getHologramManager().getHologram("topHoneyBalance")
+
+	clear {_lines::*}
+	set {_lines::*} to "<##FFB516>&lT<##FFBA26>&lO<##FFBF36>&lP <##FECA57>&lH<##FECF67>&lO<##FED477>&lN<##FFC547>&lE<##FFB516>&lY", "&7", "{@c1}&l%{_prefix}% %{_username}%", "&fBALANCE <##ffb516>&l%{_username}'s honey% HONEY", "&7"
+	if {_holoOptional}.isPresent():
+		set {_holo} to {_holoOptional}.get()
+		set {_data} to {_holo}.getData()
+
+		set {_list} to {_data}.getText()
+		set {_size} to {_list}.size()
+		loop {_size} times:
+			{_data}.removeLine(0)
+
+		loop {_lines::*}:
+			{_data}.addLine(formatToMiniMessage(raw loop-value))
+
+		{_data}.setHasChanges(true)
+		{_holo}.updateHologram()
+		{_holo}.refreshForViewers()
+
+
+	set {_npc} to FancyNpcsPlugin.get().getNpcManager().getNpc("topHoneyBalance")
+	set {_data} to {_npc}.getData()
+
+	{_data}.setSkin("%{_username}%")
+	{_npc}.removeForAll()
+	{_npc}.spawnForAll()

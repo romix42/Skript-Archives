@@ -1,0 +1,88 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+command /refer [<text>]:
+	description: Refer a player for rewards.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/refer <player>
+	prefix: {@cmd-prefix}
+	aliases: /invite
+	trigger:
+		if arg-1 isn't set:
+			send usage to player
+			stop
+
+		if arg-1 is "cancel":
+			if {refer::%player's uuid%} is not set:
+				send "{@error}You have no active referral to cancel." to player
+				stop
+
+			if player's honey >= 15:
+				remove 15 from player's honey
+				delete {refer::%getRefer(player)'s uuid%}
+				delete {refer::%player's uuid%}
+				send "{@success}Your referral invite has been cancelled. &8(&7-15 HONEY&8)" to player
+				stop
+			else:
+				send "{@error}You need &f15 HONEY {@error2}to cancel." to player
+				stop
+
+		if arg-1 parsed as player isn't online:
+			if arg-1 parsed as player hasn't played before:
+				send "{@error}Player not found!" to player
+				stop
+
+		if arg-1 parsed as player is player:
+			send "{@error}You cannot refer yourself." to player
+			stop
+
+		if arg-1 parsed as player isn't online:
+			send "{@error}This player isn't online!" to player
+			stop
+
+		if isReferred(player) = true:
+			send formatted "{@error}You are already referred. &8(&7/refer cancel &cthis costs 15 HONEY&8)" to player
+			stop
+
+		if isReferred(arg-1 parsed as player) = true:
+			send "{@error}This player is already referred!" to player
+			stop
+
+		if {refer::%arg-1 parsed as player's uuid%} is set:
+			if {refer::%arg-1 parsed as player's uuid%} != player:
+				send "{@error}This player has already been referred." to player
+				stop
+			else:
+				set {refer::%player's uuid%} to arg-1 parsed as player
+				send "{@success}You are now referred by &f%arg-1%{@success2}." to player
+				send "{@success}You are now referred by &f%player%{@success2}." to arg-1 parsed as player
+				stop
+
+		set {refer::%player's uuid%} to arg-1 parsed as player
+		send "{@success}Referral invite sent to &f%arg-1%{@success2}." to player
+		send formatted "{@prefix}{@success2}%player% &fsent you a referral invite. <ttp:&fClick to {@success2}ACCEPT&f.><cmd:/refer %player%>&7[{@success2}ACCEPT&7]<r> <ttp:&fInvites are ignored%nl%&funtil you accept them.>&7[{@error2}IGNORE&7]" to arg-1 parsed as player
+
+
+function getRefer(p: offline player):: offline player:
+	return {refer::%{_p}'s uuid%}
+
+function isReferred(p: offline player) :: boolean:
+	return false if {refer::%{_p}'s uuid%} is not set
+	
+	set {_t} to {refer::%{_p}'s uuid%}
+	return true if {refer::%{_t}'s uuid%} is {_p}
+
+	return false
+
+on tab complete of "/refer":
+	set tab completions for position 1 to all players where [input isn't player], "cancel"

@@ -1,0 +1,366 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	server: <##FFFF28>&lD<##FFFF3B>&lI<##FFFF4E>&lR<##FFFF61>&lT<##FFFF74>&lY<##FFFF61>&lR<##FFFF4E>&lI<##FFFF3B>&lC<##FFFF28>&lH
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+command /store:
+	description: Open the store.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/store
+	prefix: {@cmd-prefix}
+	aliases: /buy, /shop
+	trigger:
+		create a gui with virtual chest inventory with 5 rows named "             {@server}":
+			make gui slot (integers between 0 and 44) with light gray stained glass pane without tooltip
+			make gui slot (integers between 0 and 8) with gray stained glass pane without tooltip
+			make gui slot (integers between 36 and 44) with white stained glass pane without tooltip
+
+			make gui slot 23 with chest named "{@c1}&lRANKS" with lore "&8ꜱᴛᴏʀᴇ", "", "&7Click to view the ranks.":
+				play sound "block.chest.open" to player
+				ranksGUI(player)
+
+			make gui slot 21 with honeycomb named "{@c1}&lHONEY" with lore "&8ꜱᴛᴏʀᴇ", "", "&7Click to buy honey.":
+				play sound "entity.bee.death" to player
+				clear {_msg::*}
+				add "" to {_msg::*}
+				add formatted "<ttp:&fClick to open.><url:https://dirtyrich.craftingstore.net/> <##FFFF28>&lC<##FFFF30>&lL<##FFFF37>&lI<##FFFF3F>&lC<##FFFF46>&lK <##FFFF56>&lT<##FFFF5D>&lO <##FFFF6C>&lO<##FFFF74>&lP<##FFFF6E>&lE<##FFFF67>&lN <##FFFF5B>&lT<##FFFF54>&lH<##FFFF4E>&lE <##FFFF41>&lS<##FFFF3B>&lT<##FFFF35>&lO<##FFFF2E>&lR<##FFFF28>&lE &7(&f<ttp:&fClick to open.><url:https://dirtyrich.craftingstore.net/>https://dirtyrich.craftingstore.net<r>&7)" to {_msg::*}
+				add "" to {_msg::*}
+				set {_msg} to join {_msg::*} using nl
+				close player's inventory
+				send formatted {_msg} to player
+
+			make gui slot 31 with yellow shulker box named "{@c1}&lKEYS" with lore "&8ꜱᴛᴏʀᴇ", "", "&7Click to view the keys.":
+				play sound "entity.villager.celebrate" to player
+				keysGUI(player)
+
+		open the last gui to player
+
+function keysGUI(p: player):
+	create a gui with virtual chest inventory with 5 rows named "             {@server}":
+		make gui slot (integers between 0 and 44) with light gray stained glass pane without tooltip
+		make gui slot (integers between 0 and 8) with gray stained glass pane without tooltip
+		make gui slot (integers between 36 and 44) with white stained glass pane without tooltip
+
+		make gui slot 40 with barrier named "{@error2}&lBACK" with lore "", "&7Click to go back.":
+			play sound "item.shield.break" to {_p}
+			{_p} command "store"
+		
+		make gui slot 22 with sand named "<#FFFF14>&lS<#FDFD42>&lA<#FBFB70>&lN<#FFFF14>&lD" with lore "&8ᴋᴇʏ", "", "&fAMOUNT: {@success2}&l1", "", "&7Open at the &7&lSAND &7crate.", "", "{@success2}ℹ &fPRICE: {@c1}&l10 <##ffb516>&lHONEY":
+			set {_ID} to "SAND"
+			if {_p}'s honey >= 10:
+				keysGUI({_p})
+				remove 10 from {_p}'s honey
+				send "{@success}You bought &f1x <#FFFF14>&lS<#FDFD42>&lA<#FBFB70>&lN<#FFFF14>&lD &fKEY{@success2}!" to {_p}
+				play sound "entity.player.levelup" to {_p}
+				add 1 to {playerKey::%{_p}'s uuid%::%{_ID}%}
+				stop
+			else:
+				send "{@error}You don't have enough honey!" to {_p}
+				play sound "block.note_block.bass" to {_p}
+				stop
+
+
+
+	open the last gui to {_p}
+
+function ranksGUI(p: player):
+	set {_credit} to 0
+	set {_credit} to 100 if group of {_p} = "dust"
+	set {_credit} to 500 if group of {_p} = "dune"
+	set {_credit} to 800 if group of {_p} = "viper"
+	set {_credit} to 1000 if group of {_p} = "mummy"
+	set {_credit} to 1500 if group of {_p} = "sand"
+
+	create a gui with virtual chest inventory with 5 rows named "             {@server}":
+		make gui slot (integers between 0 and 44) with light gray stained glass pane without tooltip
+		make gui slot (integers between 0 and 8) with gray stained glass pane without tooltip
+		make gui slot (integers between 36 and 44) with white stained glass pane without tooltip
+
+		make gui slot 40 with barrier named "{@error2}&lBACK" with lore "", "&7Click to go back.":
+			play sound "item.shield.break" to {_p}
+			{_p} command "store"
+
+		# --- RICH ---
+		set {_rich_price} to "{@success2}ℹ &fPRICE: {@c1}&l3,000 <##ffb516>&lHONEY"
+		set {_rich_price} to "{@success2}ℹ &fPRICE: {@error2}&lALREADY OWNED" if getPoints({_p}) >= 6
+
+		set {_rich_actual} to 3000 - {_credit}
+		if all:
+			{_credit} > 0
+			{_rich_actual} > 0
+		then:
+			set {_rich_price} to "{@success2}ℹ &fPRICE: {@error2}&m3,000&r {@success2}&l%{_rich_actual}% <##ffb516>&lHONEY"
+
+		clear {_rich::*}
+		add "&8ʀᴀɴᴋ" to {_rich::*}
+		add " " to {_rich::*}
+		add "&7ᴘᴇʀᴋꜱ" to {_rich::*}
+		add " " to {_rich::*}
+		add " &8● {@success2}+100%% &fmoney boost" to {_rich::*}
+		add " &8● {@success2}1 second &fteleport cooldown" to {_rich::*}
+		add " &8● {@success2}sell from anywhere" to {_rich::*}
+		add " &8● {@success2}0 second &fsand regeneration time" to {_rich::*}
+		add " " to {_rich::*}
+		add "&7ᴄᴏᴍᴍᴀɴᴅꜱ" to {_rich::*}
+		add " " to {_rich::*}
+		add " &8● {@success2}/pay" to {_rich::*}
+		add " &8● {@success2}/fly" to {_rich::*}
+		add " &8● {@success2}/glow" to {_rich::*}
+		add " &8● {@success2}/size" to {_rich::*}
+		add " &8● {@success2}/nick" to {_rich::*}
+		add " &8● {@success2}/hat" to {_rich::*}
+		add " &8● {@c1}more soon..." to {_rich::*}
+		add " " to {_rich::*}
+		add {_rich_price} to {_rich::*}
+		add " " to {_rich::*}
+		set {_rich_lore} to join {_rich::*} using nl
+		make gui slot 13 with emerald block named "<##44ff3f>&lR<##67ff63>&lI<##89ff86>&lC<##44ff3f>&lH" with lore {_rich_lore}:
+			buyRank({_p}, "rich")
+
+
+		# --- SAND ---
+		set {_sand_price} to "{@success2}ℹ &fPRICE: {@c1}&l1,500 <##ffb516>&lHONEY"
+		set {_sand_price} to "{@success2}ℹ &fPRICE: {@error2}&lALREADY OWNED" if getPoints({_p}) >= 5
+
+		set {_sand_actual} to 1500 - {_credit}
+		if all:
+			{_credit} > 0
+			{_sand_actual} > 0
+		then:
+			set {_sand_price} to "{@success2}ℹ &fPRICE: {@error2}&m1,500&r {@success2}&l%{_sand_actual}% <##ffb516>&lHONEY"
+
+		clear {_sand::*}
+		add "&8ʀᴀɴᴋ" to {_sand::*}
+		add " " to {_sand::*}
+		add "&7ᴘᴇʀᴋꜱ" to {_sand::*}
+		add " " to {_sand::*}
+		add " &8● {@success2}+50%% &fmoney boost" to {_sand::*}
+		add " &8● {@success2}5 second &fteleport cooldown" to {_sand::*}
+		add " &8● {@success2}sell from anywhere" to {_sand::*}
+		add " &8● {@success2}1.5 second &fsand regeneration time" to {_sand::*}
+		add " " to {_sand::*}
+		add "&7ᴄᴏᴍᴍᴀɴᴅꜱ" to {_sand::*}
+		add " " to {_sand::*}
+		add " &8● {@success2}/pay" to {_sand::*}
+		add " &8● {@success2}/fly" to {_sand::*}
+		add " &8● {@success2}/glow" to {_sand::*}
+		add " &8● {@success2}/size" to {_sand::*}
+		add " &8● {@success2}/nick" to {_sand::*}
+		add " &8● {@success2}/hat" to {_sand::*}
+		add " &8● {@c1}more soon..." to {_sand::*}
+		add " " to {_sand::*}
+		add {_sand_price} to {_sand::*}
+		add " " to {_sand::*}
+		set {_sand_lore} to join {_sand::*} using nl
+		make gui slot 24 with sand named "<##FFFF28>&lS<##FFFF4E>&lA<##FFFF74>&lN<##FFFF28>&lD" with lore {_sand_lore}:
+			buyRank({_p}, "sand")
+
+		# --- MUMMY ---
+		set {_mummy_price} to "{@success2}ℹ &fPRICE: {@c1}&l1,000 <##ffb516>&lHONEY"
+		set {_mummy_price} to "{@success2}ℹ &fPRICE: {@error2}&lALREADY OWNED" if getPoints({_p}) >= 4
+
+		set {_mummy_actual} to 1000 - {_credit}
+		if all:
+			{_credit} > 0 
+			{_mummy_actual} > 0
+		then:
+			set {_mummy_price} to "{@success2}ℹ &fPRICE: {@error2}&m1,000&r {@success2}&l%{_mummy_actual}% <##ffb516>&lHONEY"
+			
+		clear {_mummy::*}
+		add "&8ʀᴀɴᴋ" to {_mummy::*}
+		add " " to {_mummy::*}
+		add "&7ᴘᴇʀᴋꜱ" to {_mummy::*}
+		add " " to {_mummy::*}
+		add " &8● {@success2}+35%% &fmoney boost" to {_mummy::*}
+		add " &8● {@success2}10 second &fteleport cooldown" to {_mummy::*}
+		add " &8● {@success2}sell from anywhere" to {_mummy::*}
+		add " &8● {@success2}5 second &fsand regeneration time" to {_mummy::*}
+		add " " to {_mummy::*}
+		add "&7ᴄᴏᴍᴍᴀɴᴅꜱ" to {_mummy::*}
+		add " " to {_mummy::*}
+		add " &8● {@success2}/pay" to {_mummy::*}
+		add " &8● {@success2}/fly" to {_mummy::*}
+		add " &8● {@success2}/glow" to {_mummy::*}
+		add " &8● {@success2}/size" to {_mummy::*}
+		add " &8● {@success2}/nick" to {_mummy::*}
+		add " &8● {@success2}/hat" to {_mummy::*}
+		add " &8● {@c1}more soon..." to {_mummy::*}
+		add " " to {_mummy::*}
+		add {_mummy_price} to {_mummy::*}
+		add " " to {_mummy::*}
+		set {_mummy_lore} to join {_mummy::*} using nl
+		make gui slot 23 with soul sand named "<##C29028>&lM<##D2A953>&lU<##E1C17D>&lM<##D2A953>&lM<##C29028>&lY" with lore {_mummy_lore}:
+			buyRank({_p}, "mummy")
+
+		# --- VIPER ---
+		set {_viper_price} to "{@success2}ℹ &fPRICE: {@c1}&l800 <##ffb516>&lHONEY"
+		set {_viper_price} to "{@success2}ℹ &fPRICE: {@error2}&lALREADY OWNED" if getPoints({_p}) >= 3
+
+		set {_viper_actual} to 800 - {_credit}
+		if all:
+			{_credit} > 0
+			{_viper_actual} > 0
+		then:
+			set {_viper_price} to "{@success2}ℹ &fPRICE: {@error2}&m800&r {@success2}&l%{_viper_actual}% <##ffb516>&lHONEY"
+
+		clear {_viper::*}
+		add "&8ʀᴀɴᴋ" to {_viper::*}
+		add " " to {_viper::*}
+		add "&7ᴘᴇʀᴋꜱ" to {_viper::*}
+		add " " to {_viper::*}
+		add " &8● {@success2}+10%% &fmoney boost" to {_viper::*}
+		add " &8● {@success2}15 second &fteleport cooldown" to {_viper::*}
+		add " &8● {@success2}sell from anywhere" to {_viper::*}
+		add " &8● {@success2}10 second &fsand regeneration time" to {_viper::*}
+		add " " to {_viper::*}
+		add "&7ᴄᴏᴍᴍᴀɴᴅꜱ" to {_viper::*}
+		add " " to {_viper::*}
+		add " &8● {@success2}/pay" to {_viper::*}
+		add " &8● {@success2}/glow" to {_viper::*}
+		add " &8● {@success2}/size" to {_viper::*}
+		add " &8● {@success2}/nick" to {_viper::*}
+		add " &8● {@success2}/hat" to {_viper::*}
+		add " &8● {@c1}more soon..." to {_viper::*}
+		add " " to {_viper::*}
+		add {_viper_price} to {_viper::*}
+		add " " to {_viper::*}
+		set {_viper_lore} to join {_viper::*} using nl
+		make gui slot 22 with brown concrete powder named "<##28B8C2>&lV<##53C9D1>&lI<##7ED9DF>&lP<##53C9D1>&lE<##28B8C2>&lR" with lore {_viper_lore}:
+			buyRank({_p}, "viper")
+
+		# --- DUNE ---
+		set {_dune_price} to "{@success2}ℹ &fPRICE: {@c1}&l500 <##ffb516>&lHONEY"
+		set {_dune_price} to "{@success2}ℹ &fPRICE: {@error2}&lALREADY OWNED" if getPoints({_p}) >= 2
+
+		set {_dune_actual} to 500 - {_credit}
+		if all:
+			{_credit} > 0
+			{_dune_actual} > 0
+		then:
+			set {_dune_price} to "{@success2}ℹ &fPRICE: {@error2}&m500&r {@success2}&l%{_dune_actual}% <##ffb516>&lHONEY"
+
+		clear {_dune::*}
+		add "&8ʀᴀɴᴋ" to {_dune::*}
+		add " " to {_dune::*}
+		add "&7ᴘᴇʀᴋꜱ" to {_dune::*}
+		add " " to {_dune::*}
+		add " &8● {@success2}+5%% &fmoney boost" to {_dune::*}
+		add " &8● {@success2}20 second &fteleport cooldown" to {_dune::*}
+		add " &8● {@success2}sell from anywhere" to {_dune::*}
+		add " " to {_dune::*}
+		add "&7ᴄᴏᴍᴍᴀɴᴅꜱ" to {_dune::*}
+		add " " to {_dune::*}
+		add " &8● {@success2}/pay" to {_dune::*}
+		add " &8● {@success2}/nick" to {_dune::*}
+		add " &8● {@success2}/hat" to {_dune::*}
+		add " &8● {@c1}more soon..." to {_dune::*}
+		add " " to {_dune::*}
+		add {_dune_price} to {_dune::*}
+		add " " to {_dune::*}
+		set {_dune_lore} to join {_dune::*} using nl
+		make gui slot 21 with red sand named "<##BCC228>&lD<##CCD154>&lU<##DCDF80>&lN<##BCC228>&lE" with lore {_dune_lore}:
+			buyRank({_p}, "dune")
+
+		# --- DUST ---
+		set {_dust_price} to "{@success2}ℹ &fPRICE: {@c1}&l100 <##ffb516>&lHONEY"
+		set {_dust_price} to "{@success2}ℹ &fPRICE: {@error2}&lALREADY OWNED" if getPoints({_p}) >= 1
+
+		set {_dust_actual} to 100 - {_credit}
+		if all:
+			{_credit} > 0
+			{_dust_actual} > 0
+		then:
+			set {_dust_price} to "{@success2}ℹ &fPRICE: {@error2}&m100&r {@success2}&l%{_dust_actual}% <##ffb516>&lHONEY"
+
+		clear {_dust::*}
+		add "&8ʀᴀɴᴋ" to {_dust::*}
+		add " " to {_dust::*}
+		add "&7ᴘᴇʀᴋꜱ" to {_dust::*}
+		add " " to {_dust::*}
+		add " &8● {@success2}sell from anywhere" to {_dust::*}
+		add " " to {_dust::*}
+		add "&7ᴄᴏᴍᴍᴀɴᴅꜱ" to {_dust::*}
+		add " " to {_dust::*}
+		add " &8● {@success2}/pay" to {_dust::*}
+		add " &8● {@c1}more soon..." to {_dust::*}
+		add " " to {_dust::*}
+		add {_dust_price} to {_dust::*}
+		add " " to {_dust::*}
+		set {_dust_lore} to join {_dust::*} using nl
+		make gui slot 20 with gunpowder named "<##C22881>&lD<##CF549B>&lU<##DC80B5>&lS<##C22881>&lT" with lore {_dust_lore}:
+			buyRank({_p}, "dust")
+
+	open the last gui to {_p}
+
+function getPoints(p: player):: number:
+	set {_points} to 0
+	set {_points} to 1 if group of {_p} = "dust"
+	set {_points} to 2 if group of {_p} = "dune"
+	set {_points} to 3 if group of {_p} = "viper"
+	set {_points} to 4 if group of {_p} = "mummy"
+	set {_points} to 5 if group of {_p} = "sand"
+	set {_points} to 6 if group of {_p} = "rich"
+	set {_points} to 7 if group of {_p} = "jr-mod", "mod", "sr-mod" or "owner"
+	return {_points} ? 0
+
+function buyRank(p: player, rank: string):
+	set {_points} to getPoints({_p})
+
+	set {_credit} to 0
+	set {_credit} to 100 if group of {_p} = "dust"
+	set {_credit} to 500 if group of {_p} = "dune"
+	set {_credit} to 800 if group of {_p} = "viper"
+	set {_credit} to 1000 if group of {_p} = "mummy"
+	set {_credit} to 1500 if group of {_p} = "sand"
+
+	if {_rank} = "rich":
+		set {_full} to 3000
+		set {_threshold} to 6
+		set {_display} to "&7[<##44ff3f>&lR<##67ff63>&lI<##89ff86>&lC<##44ff3f>&lH&7]"
+	else if {_rank} = "sand":
+		set {_full} to 1500
+		set {_threshold} to 5
+		set {_display} to "&7[<##FFFF28>&lS<##FFFF4E>&lA<##FFFF74>&lN<##FFFF28>&lD&7]"
+	else if {_rank} = "mummy":
+		set {_full} to 1000
+		set {_threshold} to 4
+		set {_display} to "&7[<##C29028>&lM<##D2A953>&lU<##E1C17D>&lM<##D2A953>&lM<##C29028>&lY&7]"
+	else if {_rank} = "viper":
+		set {_full} to 800
+		set {_threshold} to 3
+		set {_display} to "&7[<##28B8C2>&lV<##53C9D1>&lI<##7ED9DF>&lP<##53C9D1>&lE<##28B8C2>&lR&7]"
+	else if {_rank} = "dune":
+		set {_full} to 500
+		set {_threshold} to 2
+		set {_display} to "&7[<##BCC228>&lD<##CCD154>&lU<##DCDF80>&lN<##BCC228>&lE&7]"
+	else if {_rank} = "dust":
+		set {_full} to 100
+		set {_threshold} to 1
+		set {_display} to "&7[<##C22881>&lD<##CF549B>&lU<##DC80B5>&lS<##C22881>&lT&7]"
+
+	if {_points} >= {_threshold}:
+		send "{@error}You already have a higher rank!" to {_p}
+		play sound "block.note_block.bass" to {_p}
+		stop
+
+	set {_cost} to {_full} - {_credit}
+
+	if {_p}'s honey >= {_cost}:
+		close {_p}'s inventory
+		remove {_cost} from {_p}'s honey
+		set {_p}'s group to {_rank}
+		send "{@success}You bought %{_display}% {@success2}rank!" to {_p}
+		play sound "entity.player.levelup" to {_p}
+		addTeam({_p})
+	else:
+		send "{@error}You don't have enough honey!" to {_p}
+		play sound "block.note_block.bass" to {_p}

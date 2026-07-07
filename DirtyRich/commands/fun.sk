@@ -1,0 +1,158 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+function sitAt(sitter: entity, sitLocation: location, offsetVec: vector = vector(0,0,0)):
+	spawn text display at {_sitLocation} ~ {_offsetVec}:
+		set metadata "seat" of entity to true
+		make {_sitter} ride entity
+
+
+on dismount:
+	set {_vehicle} to vehicle of player
+	{_vehicle} has metadata "seat"
+	wait a tick
+	delete entity within {_vehicle}
+
+command /scale [<number>]:
+	description: Change your size.
+	aliases: /size
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/scale <number>
+	cooldown: 5 seconds
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if checkPaidRank(player, "viper") != true:
+			stop
+
+		if arg-1 isn't set:
+			send usage to player
+			stop
+			
+		if arg-1 > 1.5:
+			send "{@error}You can't be bigger! &7(&f0.5 - 1.5&7)" to player
+			stop
+		else if arg-1 < 0.5:
+			send "{@error}You can't be smaller! &7(&f0.5 - 1.5&7)" to player
+			stop
+
+		set player's scale attribute to arg-1
+		send "{@success}Your size is now &f%arg-1%{@success2}." to player
+
+command /fly:
+	description: Toggle your flight.
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/fly
+	cooldown: 5 seconds
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if checkPaidRank(player, "mummy") != true:
+			stop
+			
+		set player's flight mode to inverse of player's flight mode
+		send "{@success}Flight mode enabled." to player if inverse of player's flight mode = false
+		send "{@success}Flight mode {@error2}disabled{@success2}." to player if inverse of player's flight mode = true
+
+
+command /hat:
+	description: Equip a honey block on your head.
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/hat
+	cooldown: 5 seconds
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if checkPaidRank(player, "dune") != true:
+			stop
+			
+		set {_item} to honey block
+		enchant {_item} with curse of binding 255
+		enchant {_item} with curse of vanishing 255
+		set {_item} to hideAttributes( {_item} )
+		make {_item} not glint
+		if player's helmet = air:
+			set player's helmet to {_item} named "{@c1}&lHONEY"
+			send "{@success}Hat equipped." to player
+		else:
+			set player's helmet to air
+			send "{@success}Hat unequipped." to player if player's helmet = air
+
+command /glow:
+	description: Toggle your glow.
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/glow
+	cooldown: 5 seconds
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if checkPaidRank(player, "viper") != true:
+			stop
+			
+		set glowing of player to inverse of glowing of player
+		send "{@success}Glowing enabled." to player if inverse of glowing of player = false
+		send "{@success}Glowing {@error2}disabled{@success2}." to player if inverse of glowing of player = true
+
+command /nick [<string>]:
+	description: Change your name.
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/nick <text | off>
+	cooldown: 5 seconds
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if checkPaidRank(player, "dune") != true:
+			stop
+			
+		if arg-1 isn't set:
+			send usage to player
+			stop
+		
+		else if arg-1 = "off":
+			set player's displayname to "%player%"
+
+		else if length of arg-1 > 16:
+			send "{@error2}Your name must be shorter. &7(&f3-16&7)"
+			cancel cooldown
+			stop
+
+		else if length of arg-1 < 3:
+			send "{@error2}Your name must be longer. &7(&f3-16&7)"
+			cancel cooldown
+			stop
+
+		else if (arg-1 parsed as offline player) has played on this server before:
+			if player is op:
+				set player's displayname to "<ttp:&7Real name: &f%player%&7.>%arg-1%&r"
+
+			else:
+				send "{@error2}A player already has that name!"
+				cancel cooldown
+				stop
+
+		else:
+			if player is op:
+				set player's displayname to "<ttp:&7Real name: &f%player%&7.>%arg-1%&r"
+			else:
+				set player's displayname to "<ttp:&7Real name: &f%player%&7.>%arg-1%&7*&r"
+
+		
+		send formatted "{@success}Your name is now &f%player's displayname%{@success2}."
+
+	
+function checkPaidRank(p: player, rank: string):: boolean:
+	set {_name} to "&7[<##C22881>&lD<##CF549B>&lU<##DC80B5>&lS<##C22881>&lT&7]"                if {_rank} = "dust"
+	set {_name} to "&7[<##BCC228>&lD<##CCD154>&lU<##DCDF80>&lN<##BCC228>&lE&7]"                if {_rank} = "dune"
+	set {_name} to "&7[<##28B8C2>&lV<##53C9D1>&lI<##7ED9DF>&lP<##53C9D1>&lE<##28B8C2>&lR&7]" if {_rank} = "viper"
+	set {_name} to "&7[<##C29028>&lM<##D2A953>&lU<##E1C17D>&lM<##D2A953>&lM<##C29028>&lY&7]" if {_rank} = "mummy"
+	set {_name} to "&7[<##FFFF28>&lS<##FFFF4E>&lA<##FFFF74>&lN<##FFFF28>&lD&7]<##3fc2ff>✔"                if {_rank} = "sand"
+
+	if {_p} has permission "%{_rank}%":
+		return true
+	else:
+		send "{@error}You need %{_name}%{@error2} rank to use this feature!" to {_p}
+		return false

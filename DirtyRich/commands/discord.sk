@@ -1,0 +1,353 @@
+options:
+	BOT_NAME: DirtyRich
+	BOT_TOKEN: MTQ5NjU3MTQ1MjI1Mjc1MDA0NQ.Gmxo7q.w_AaFkeA4UsUdFYS-mkBQ6ZLL36IZPJqbGWgo8
+
+	GUILD_ID: 1495806936870817853
+
+	LINK_CHANNEL: 1495812182661795920
+	LINKED_ROLE: 1496555773348806806
+
+	COLOR: <##ffff28>
+	PREFIX: <##ffff28>&lDIRTYRICH &8| &f 
+
+	INVITE_LINK: https://discord.gg/p5XHw3DCns
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+import:
+	java.security.SecureRandom
+	java.math.BigInteger
+	java.util.ArrayList
+	net.itsthesky.disky.elements.componentsv2.base.ContainerBuilder
+
+define new bot named "{@BOT_NAME}":
+	token: "{@BOT_TOKEN}"
+	intents: default intents
+	policy: all
+	auto reconnect: true
+	cache flags: all
+
+	on ready:
+		set the online status of event-bot to online
+		set the presence of event-bot to competing "(/link) To link your account."
+
+command /discord:
+	description: Join the discord server.
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/discord
+	cooldown: 5 seconds
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		send "" to player
+		send " {@PREFIX}<url:{@INVITE_LINK}><ttp:&fClick to open.>Click here to join the discord server.<reset>" to player
+		send " <url:{@INVITE_LINK}><ttp:&fClick to open.>&9&n{@INVITE_LINK}" to player
+		send "" to player
+
+function generateRandomCode(n: integer = 6) :: string:
+	set {_code} to new BigInteger({_n} * 5, new SecureRandom()).toString(32)
+	while length of {_code} < {_n}:
+		set {_code} to new BigInteger({_n} * 5, new SecureRandom()).toString(32)
+	return first {_n} characters of {_code}
+
+function generateUniqueCode() :: string:
+	set {_code} to generateRandomCode()
+	while {-vanityCode::%{_code}%} is set:
+		set {_code} to generateRandomCode()
+	return {_code}
+
+function generatePlayerCode(plr: player):
+	set {_UUID} to (uuid of {_plr})
+	set {_CODE} to generateUniqueCode()
+
+	set {-vanityCode::%{_CODE}%} to {_UUID}
+	set boolean tag "generatedLinkCode" of custom nbt of {_plr} to true
+
+	set {_url} to (channel with id "{@LINK_CHANNEL}").getJumpUrl()
+
+	send "" to {_plr}
+	send component minimessage from " <white>ᴄʟɪᴄᴋ ᴛᴏ ᴄᴏᴘʏ ᴛʜᴇ ᴄᴏᴅᴇ: {@COLOR}<u><click:copy_to_clipboard:%{_CODE}%>%{_CODE}%</click></u><reset> <gray>(Click to copy)<reset>" to {_plr}
+	send component minimessage from " <white>ᴇɴᴛᴇʀ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅ <gray>/ʟɪɴᴋ [ᴄᴏᴅᴇ] <white>ɪɴ&r {@COLOR}<u>#<click:open_url:%{_url}%>%(channel with id "{@LINK_CHANNEL}").getName()%</click></u><reset> <gray>(Click to open)" to {_plr}
+	send "", " &7ᴛʜɪꜱ ᴄᴏᴅᴇ ᴡɪʟʟ ᴇxᴘɪʀᴇ ɪɴ {@COLOR}2 ᴍɪɴᴜᴛᴇꜱ", "" to {_plr}
+
+	wait 120 seconds
+	if {-vanityCode::%{_CODE}%} is set:
+		delete {-vanityCode::%{_CODE}%}
+		clear boolean tag "generatedLinkCode" of custom nbt of {_plr}
+
+		play sound "entity.villager.no" with volume 1 with pitch 1 for {_plr}
+		send "{@error}Your code has expired. &8(&f/link &7to generate another one&8)" to {_plr}
+
+command /link:
+	description: Link your discord account.
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/link
+	cooldown: 5 seconds
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if boolean tag "generatedLinkCode" of custom nbt of player is not set:
+			if {linked::player::%player's uuid%} is not set:
+				run 0 tick later:
+					generatePlayerCode(player)
+				play sound "block.note_block.flute" with volume 1 with pitch 1 to player
+			else:
+				play sound "block.note_block.bass" with volume 1 with pitch 1 to player
+
+				set {_UUID} to (uuid of player)
+				set {_member} to (guild with id "{@GUILD_ID}").getMemberById({linked::player::%{_UUID}%::ID})
+
+				send "", " {@PREFIX}Your account is already linked." to player
+				send component minimessage from " <gray><hover:show_text:'%nl% <gray>Information: <white>%{linked::player::%{_UUID}%::date}% %nl% <dark_gray>- <gray>Username: {@COLOR}%player% %nl% <dark_gray>- <gray>UUID: {@COLOR}%{_UUID}% %nl% <dark_gray>- <gray>Member: {@COLOR}%{_member}.getEffectiveName()% %nl% <dark_gray>- <gray>Member ID: {@COLOR}%{_member}.getId()% %nl% %nl% <gray>If you believe this is an error %nl% <gray>Please contact an Administrator. %nl%'><gray>(<white>ʜᴏᴠᴇʀ ꜰᴏʀ ᴍᴏʀᴇ ɪɴꜰᴏ<gray>)</hover><reset>" to player
+				send "" to player
+		else:
+			play sound "entity.villager.no" with volume 1 with pitch 1 for player
+			send "{@error}A link code has already been generated!"
+
+on join:
+	clear boolean tag "generatedLinkCode" of custom nbt of player
+
+slash command sync:
+	description: Sync your minecraft rank.
+	
+	guilds: {@GUILD_ID}
+	bot: {@BOT_NAME}
+
+	trigger:
+		if {linked::member::%event-member.getId()%::UUID} isn't set:
+			reply with hidden ":x: You aren't linked!"
+		else:
+			syncMember(event-member)
+			reply with hidden ":white_check_mark: Your role is now synced."
+
+slash command players:
+	description: View the online players.
+	guilds: {@GUILD_ID}
+	bot: {@BOT_NAME}
+
+	trigger:
+		loop all players:
+			if {linked::player::%loop-player's uuid%::ID} is set:
+				set {_id} to {linked::player::%loop-player's uuid%::ID}
+				set {_p} to "%{_p} ? ""%%nl%`%loop-player%` (<@%{_id}%>)"
+			else:
+				set {_p} to "%{_p} ? ""%%nl%`%loop-player%`"
+		create a new container with unique id 55 and store it in {_container}:
+			create a new container section and store it in {_section}:
+				add "### PLAYERS (%size of all players%)" to content of the section
+				add "%{_p}%" to content of the section
+
+				set accessory of the section to (new thumbnail with source (file upload from url "https://i.imgur.com/tUTrFao.png"))
+			add {_section} to content of the container
+		reply with {_container} with disabled mentions
+
+slash command link <string="code">:
+	description: Link your Minecraft to your Discord account.
+	
+	guilds: {@GUILD_ID}
+	bot: {@BOT_NAME}
+
+	arguments:
+		code: Enter the provided code via /link
+
+	trigger:
+		if "%event-channel.getId()%" = "{@LINK_CHANNEL}":
+			set {_CODE} to argument "code" as string
+			if {-vanityCode::%{_CODE}%} is set:
+				set {_member} to event-member
+				set {_ID} to {_member}.getId()
+				set {_player} to offlineplayer({-vanityCode::%{_CODE}%}, false)
+				set {_UUID} to (uuid of {_player})
+
+				if {linked::member::%{_ID}%} and {linked::player::%{_UUID}%} is not set:
+
+					delete {-vanityCode::%{_CODE}%}
+					clear boolean tag "generatedLinkCode" of custom nbt of {_player}
+
+					set {linked::player::%{_UUID}%} to true
+					set {linked::member::%{_ID}%} to true
+
+					set {linked::player::%{_UUID}%::ID} to {_ID}
+					set {linked::player::%{_UUID}%::date} to now
+					set {linked::member::%{_ID}%::UUID} to {_UUID}
+
+					reply with linkedContainer({_player}) with disabled mentions
+					send "", " {@PREFIX} &7You are now linked to {@COLOR}%{_member}.getEffectiveName()%", "" to {_player}
+					if hasRank({_player}) != true:
+						console command "lp user %{_player}% parent set linked"
+						wait 15 ticks
+						syncMember({_member})
+					play sound "entity.experience_orb.pickup" with volume 1 with pitch 1 to {_player}
+
+					add (role with id "{@LINKED_ROLE}") to roles of {_member}
+					{_member}.modifyNickname("(✔) %{_player}%").queue()
+				else:
+					reply with hidden errorContainer("alreadyLinked")
+			else:
+				reply with hidden errorContainer("wrongCode")
+		else:
+			reply with hidden errorContainer("wrongChannel")
+
+on join with priority monitor:
+	if {-loadedDisky} != true:
+		while {-loadedDisky} != true:
+			add 1 to {_}
+			if {_} >= 5:
+				exit loop
+			wait 1 second
+			
+	create a new container with unique id 50 and store it in {_container}:
+		create a new container section and store it in {_section}:
+			add "%nl%[+] **%player%** joined." to content of the section
+
+			set accessory of the section to (new thumbnail with source (file upload from url "https://cravatar.eu/head/%player's uuid%/256.png"))
+		add {_section} to content of the container
+	post {_container} to channel with id "1495812568051355689"
+
+on quit with priority monitor:
+	create a new container with unique id 50 and store it in {_container}:
+		create a new container section and store it in {_section}:
+			add "%nl%[-] **%player%** left." to content of the section
+
+			set accessory of the section to (new thumbnail with source (file upload from url "https://cravatar.eu/head/%player's uuid%/256.png"))
+		add {_section} to content of the container
+	post {_container} to channel with id "1495812568051355689"
+
+on load:
+	wait 40 ticks
+	set {-loadedDisky} to true
+	create a new container with unique id 50 and store it in {_container}:
+		create a new container section and store it in {_section}:
+			add "%nl%:green_circle: Server started." to content of the section
+
+			set accessory of the section to (new thumbnail with source (file upload from url "https://i.imgur.com/tUTrFao.png"))
+		add {_section} to content of the container
+	post {_container} to channel with id "1495812568051355689"
+
+function syncMember(u: member):
+	set {_p} to {linked::member::%{_u}.getId()%::UUID} parsed as offline player
+	set {_sand} to  "1495810326711505096"
+	set {_mummy} to "1496178812650651871"
+	set {_viper} to "1496178607880671279"
+	set {_dune} to  "1496178571100684489"
+	set {_dust} to  "1496178429979267255"
+	set {_linked} to "{@LINKED_ROLE}"
+	if {_p}'s group = "dust":
+		set {_rank} to {_dust}
+	else if {_p}'s group = "dune":
+		set {_rank} to {_dune}
+	else if {_p}'s group = "viper":
+		set {_rank} to {_viper}
+	else if {_p}'s group = "mummy":
+		set {_rank} to {_mummy}
+	else if {_p}'s group = "sand":
+		set {_rank} to {_sand}
+	else if {_p}'s group = "linked":
+		set {_rank} to {_linked}
+	else:
+		stop
+	add role with id "%{_linked}%" to roles of {_u}
+	add role with id "%{_rank}%" to roles of {_u}
+
+function linkedContainer(plr: offlineplayer) :: container:
+	set {_UUID} to uuid of {_plr}
+	create a new container with unique id 50 and store it in {_container}:
+		create a new container section and store it in {_section}:
+			add "### LINKED <@%{linked::player::%{_UUID}%::ID}%>" to content of the section
+			add "Congrats **`%{_plr}%`**, You've %nl%linked your account to this discord." to content of the section
+			add "-# %now%" to content of the section
+
+			set accessory of the section to (new thumbnail with source (file upload from url "https://cravatar.eu/head/%{_UUID}%/256.png"))
+		add {_section} to content of the container
+	return {_container}
+
+command /unlink [<offline player>]:
+	description: Unlink your discord account.
+	prefix: {@cmd-prefix}
+	permission: op
+	permission message: {@error}Only administrators can use this command!
+	usage: {@error}Usage: &f/unlink
+	cooldown: 20 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		set {_UUID} to (arg-1's uuid)
+		if {linked::player::%{_UUID}%} is set:
+			unlinkPlayer(arg-1)
+			play sound "block.note_block.bit" with volume 1 with pitch 1 to player
+			send "", " {@success}The player has been unlinked.", "" to player
+		else:
+			play sound "entity.villager.no" with volume 1 with pitch 1 for player
+			send "{@error}The player is not linked." to player
+
+function unlinkPlayer(plr: offline player):
+	set {_UUID} to (uuid of {_plr})
+	set {_ID} to {linked::player::%{_UUID}%::ID}
+	set {_member} to (guild with id "{@GUILD_ID}").getMemberById({linked::player::%{_UUID}%::ID})
+
+	clear boolean tag "generatedLinkCode" of custom nbt of {_plr}
+
+	clear {linked::player::%{_UUID}%::*}, {linked::member::%{_ID}%::*}
+	delete {linked::player::%{_UUID}%}, {linked::member::%{_ID}%}
+
+	remove (role with id "{@LINKED_ROLE}") from roles of {_member}
+	if hasRank({_plr}) = false:
+		console command "lp user %{_plr}% parent set default"
+	{_member}.modifyNickname(null).queue()
+
+function errorContainer(parameter: string) :: container:
+	if {_parameter} = "wrongChannel":
+		create a new container with unique id 50 and store it in {_container}:
+			add "You are using the wrong link channel. %nl%the correct one is <#{@LINK_CHANNEL}>" to content of the container
+		return {_container}
+
+	if {_parameter} = "wrongCode":
+		create a new container with unique id 50 and store it in {_container}:
+			add "The provided code does not exist, or is invalid. %nl%Please provide a correct one." to content of the container
+		return {_container}
+	
+	if {_parameter} = "alreadyLinked":
+		create a new container with unique id 50 and store it in {_container}:
+			add "You are already linked. If you think this is %nl%an error. Please contact an Administrator." to content of the container
+		return {_container}
+
+expression %objects% with disabled [role] mention[s]:
+	return type: MessageCreateBuilder
+	get:
+		set {_object} to expression-1
+		set {_messageBuilder} to new MessageCreateBuilder()
+		
+		if {_object} is instance of ContainerBuilder:
+			{_messageBuilder}.useComponentsV2().setComponents({_object}.build())
+		else if {_object} is instance of EmbedBuilder:
+			{_messageBuilder}.addEmbeds({_object}.build())
+		else if {_object} is instance of MessagePollBuilder:
+			{_messageBuilder}.setPoll({_object}.build())
+		else if {_object} is instance of MessageCreateBuilder:
+			set {_messageBuilder} to {_object}
+		else if {_object} is instance of String:
+			{_messageBuilder}.setContent({_object})
+		
+		return {_messageBuilder}.setAllowedMentions(new ArrayList())
+
+on message receive:
+	discord id of event-channel = "1495812568051355689"
+	event-member is not a discord bot
+	"%event-message%" != "" or " "
+
+	set {_player} to event-member.getId()
+	set {_player} to {linked::member::%{_player}%::UUID}
+	if {_player} isn't set:
+		destroy event-message
+		remove role with id "{@LINKED_ROLE}" from roles of event-member
+		post "%mention tag of event-member% **You need to link your Minecraft account to chat here!**%nl%-# Run `/link` in game to start linking." to event-channel and store it in {_warning}
+		wait 10 seconds
+		destroy {_warning}
+	else:
+		set {_prefix} to formatToMiniMessage( raw prefixOfPlayer( {_player} parsed as offline player ) )
+		send component merge components (minimessage from "<aqua>[<reset><blue><bold>DISCORD<reset><aqua>]<reset> %{_prefix}% %{_player} parsed as offline player%<reset> ") and text component from "&8» &7%event-message%" to all players
+
+on tab complete of "/unlink":
+	set tab completions for position 1 to all players where [{linked::player::%input's uuid%} = true]

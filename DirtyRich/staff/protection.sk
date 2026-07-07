@@ -1,0 +1,250 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+	blocked commands: "icanhasbukkit", "plugins", "pl", "about", "ver", "version", "?", "disky", "help", "giveHoney", "givehoney", "csbuy", "craftingstore", "invsee", "endersee", "invseeplusplusreload", "sk", "skript", "trigger", "we", "perms", "perm", "paytoggle", "version", "permission", "permissions", "worldedit", "msg", "fastasyncworldedit", "fawe", "luckperms", "me", "w", "worldedit", "tell", "balancetop", "skbee", "teammsg", "me", "中sell", "乡view", "xconomy", "ebalancetop", "balance", "bal", "ebaltop", "eco", "eeconomy", "economy", "lp", "money"
+
+on right click:
+	if player is op:
+		if player's gamemode is creative:
+			stop
+	
+	
+	if isRod(player's tool) = true:
+		if "%event-block%" isn't "<none>":
+			if paper tags of event-block contains paper tag "trapdoors", "doors":
+				cancel event
+				stop
+		else:
+			stop
+		
+	cancel event
+
+
+on drop with priority lowest:
+	if line 1 of lore of event-item doesn't contain "ᴘᴏᴜᴄʜ":
+		cancel event
+		stop
+
+	if line 1 of lore of event-item contains "ᴘᴏᴜᴄʜ":
+		set {_lore} to line 1 of lore of event-item
+		set {_line::*} to line 3 of lore of event-item split at " "
+		set {_min} to unformatted {_line::2}
+		set {_max} to unformatted {_line::4} if {_lore} = "&8ᴍᴏɴᴇʏ ᴘᴏᴜᴄʜ"
+		set {_max} to unformatted {_line::5} if {_lore} = "&8ʜᴏɴᴇʏ ᴘᴏᴜᴄʜ"
+		replace all "$", "", ",", "HONEY" in {_max} with ""
+		replace all "$", "", ",", "HONEY" in {_min} with ""
+		set {_max} to {_max} parsed as number
+		set {_min} to {_min} parsed as number
+		run 0 ticks later:
+			delete event-dropped item
+
+		set {_money} to a random number from {_min} to {_max} if {_lore} = "&8ᴍᴏɴᴇʏ ᴘᴏᴜᴄʜ"
+		set {_money} to a random integer from {_min} to {_max} if {_lore} = "&8ʜᴏɴᴇʏ ᴘᴏᴜᴄʜ"
+		
+		if {_lore} = "&8ᴍᴏɴᴇʏ ᴘᴏᴜᴄʜ":
+			loop 30 times:
+				add 1 to {_}
+				send title "{@success2}$%format(random number from {_min} to {_max})%" to player
+				play sound "block.note_block.hat" to player
+				set {_time} to "%{_} / 2.95% ticks" parsed as timespan
+				wait {_time}
+			play sound "block.note_block.hat" to player
+			send title "{@success2}$%format({_money})%" to player
+			wait 5 ticks
+			play sound "entity.pillager.celebrate" with seed 0
+			add {_money} to player's balance
+			stop
+
+		else if {_lore} = "&8ʜᴏɴᴇʏ ᴘᴏᴜᴄʜ":
+			loop 30 times:
+				add 1 to {_}
+				send title "{@c1}&l%Format(random integer from {_min} to {_max})% HONEY" to player
+				play sound "block.note_block.hat" to player
+				set {_time} to "%{_} / 2% ticks" parsed as timespan
+				wait {_time}
+			play sound "block.note_block.hat" to player
+			send title "{@c1}&l%Format({_money})% HONEY" to player
+			wait 5 ticks
+			play sound "entity.pillager.celebrate" with seed 0
+			add {_money} to player's honey
+			stop
+
+on food level change with priority lowest:
+	cancel event
+
+on join with priority lowest:
+	teleport player to {spawn}
+
+	set saturation of player to 10
+	set hunger meter of player to 10
+
+on respawn with priority lowest:
+	teleport player to {spawn}
+
+	set saturation of player to 10
+	set hunger meter of player to 10
+
+
+on block damage:
+	if event-block = sand, gravel, red concrete powder, soul sand or dirt:
+		stop
+
+	if allowedToBreak(player) = false:
+		cancel event
+
+on place with priority lowest:
+	if allowedToBreak(player) = false:
+		cancel event
+
+on block break:
+	if event-block = sand, gravel, red concrete powder, soul sand or dirt:
+		stop
+
+	if allowedToBreak(player) = false:
+		cancel event
+
+on left click with priority lowest:
+	if event-entity = armor stand or glow item frame or item frame:
+		if player is op:
+			if player's gamemode isn't creative:
+				cancel event
+		else:
+			cancel event
+
+on right click with priority lowest:
+	if event-entity = armor stand or glow item frame or item frame:
+		if player is op:
+			if player's gamemode isn't creative:
+				cancel event
+		else:
+			cancel event
+		
+on vehicle damage:
+	if attacker is op:
+		if attacker's gamemode isn't creative:
+			cancel event
+	else:
+		cancel event
+
+on damage with priority lowest:
+	if any:
+		damage cause = kill
+		damage cause = killed
+		damage cause = custom
+		damage cause = unknown
+		damage cause = plugin
+		victim = interaction
+	then:
+		stop
+
+	if victim = armor stand or glow item frame or item frame or minecart:
+		if attacker is op:
+			if attacker's gamemode isn't creative:
+				cancel event
+		else:
+			cancel event
+
+	if canDamage(attacker) != true:
+		cancel event
+	else:
+		set the damage to 0
+		heal victim by 100 hearts
+
+function allowedToBreak(p: player):: boolean:
+	if {_p} is op:
+		if {_p}'s gamemode is creative:
+			return true
+	# more checks here later
+
+	return false
+
+function canDamage(p: player):: boolean:
+	if {_p} is op:
+		if {_p}'s gamemode is creative:
+			return true
+	
+	return false
+
+
+command /ver [<string>]:
+	description: View the server's stats.
+	aliases: /version, /ver, /?, /about, /help, /minecraft:version, /info, /bukkit:info
+	prefix: bukkit
+	usage: {@error}Usage: &f/ver
+	cooldown: 10 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		clear {_msg::*}
+	
+		add "<##80d7ff>- <##52c8ff>&nDirtyRich&r &fby <##52c8ff>romix_42 &f<ttp:&fClick to open <##52c8ff>romix&f's%nl%&fdiscord server.><url:https://discord.gg/Uh7c6kAYNA>(@romix_42)<r>" to {_msg::*}
+
+		add "<##80d7ff>ℹ Server Version &fPaper 1.21.10" to {_msg::*}
+		add "<##80d7ff>ℹ Plugins &fSkript" to {_msg::*}
+		add "" to {_msg::*}
+		add "<##80d7ff>ℹ Developer &fromix_42" to {_msg::*}
+		add "" to {_msg::*}
+
+		set {_m} to join {_msg::*} using nl
+
+		send formatted {_m} to player
+
+
+on send command list with priority lowest:
+	if player isn't op:
+		set {_cmdList::*} to command list
+		remove {_cmdList::*} where [input contains ":"] from {_cmdList::*}
+		loop {@blocked commands} and "xc":
+			remove loop-value from {_cmdList::*} if {_cmdList::*} contains loop-value
+
+		remove "staff", "panel", "grimac", "grim" from {_cmdList::*} if player doesn't have permission "staff"
+			
+		set command list to {_cmdList::*}
+
+on command with priority lowest:
+	executor is a player
+	set {_cmd::*} to full command split at " "
+
+	if {_cmd::1} = "staff" or "panel" or "grimac" or "grim":
+		if player doesn't have permission "staff":
+			cancel event
+			send formatted "&cUnknown or incomplete command, see below for error%nl%<suggest command:/%full command%>&n%full command%&r<suggest command:/%full command%>&c&o<--[HERE]"
+			stop
+
+	if {_cmd::1} = "pay":
+		cancel event
+		player command "dirtyrich:pay %{_cmd::2} ? ""% %{_cmd::3} ? ""% %{_cmd::4} ? ""%"
+
+	if player isn't op:
+		if {_cmd::1} contains ":":
+			if {_cmd::1} != "bukkit:bukkit:info", "中文鍵文键盘盤中:中sell", "dirtyrich:baltop", "dirtyrich:pay", or "view":
+				cancel event
+				send formatted "&cUnknown or incomplete command, see below for error%nl%<suggest command:/%full command%>&n%full command%&r<suggest command:/%full command%>&c&o<--[HERE]"
+				stop
+
+		if {_cmd::1} = "buy":
+			cancel event 
+			player command "store"
+
+		if {_cmd::1} = "baltop":
+			cancel event
+			player command "dirtyrich:baltop"
+
+		if {_cmd::1} = {@blocked commands} or "xc":
+			cancel event
+			send formatted "&cUnknown or incomplete command, see below for error%nl%<suggest command:/%full command%>&n%full command%&r<suggest command:/%full command%>&c&o<--[HERE]"
+			stop
+
+
+on tab complete:
+	player isn't op
+	if event-string contains "/help", "/icanhasbukkit", "/plugins", "/pl", "/about", "/ver", "/version" or "/?":
+		clear tab completions

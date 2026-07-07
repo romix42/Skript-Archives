@@ -1,0 +1,131 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+
+	prestige-max: 45
+	prestige-base-cost: 500000
+	prestige-cost-multiplier: 3.0
+	prestige-boost-per-level: 25
+
+# This isn't only prestige
+# but I'm tired of editing 50243324324 files just for 1 addition
+function getPrestigeMultiplier(p: player) :: number:
+	set {_lvl} to getOrDefault({prestige::%{_p}'s uuid%}, 0)
+	set {_pres} to 1 + ({_lvl} * ({@prestige-boost-per-level} / 100.0))
+	return {_pres} * rankBoost({_p})
+
+function rankBoost(p: player):: number:
+	set {_group} to "%{_p}'s group%"
+	if {_group} = "rich":
+		return 2
+	if {_group} = "sand":
+		return 1.5
+	if {_group} = "mummy":
+		return 1.35
+	if {_group} = "viper":
+		return 1.10
+	if {_group} = "dune":
+		return 1.05
+
+
+	return 1
+
+function getPrestigeCost(currentPrestige: number) :: number:
+	return floor({@prestige-base-cost} * ({@prestige-cost-multiplier} ^ {_currentPrestige}))
+
+function getPrestigeTag(lvl: number) :: string:
+	return "<##ff89f9>[<##ff28f4>P%{_lvl}%<##ff89f9>]"
+
+command /prestige [<text>]:
+	description: Prestige.
+	cooldown: 20 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/prestige
+	prefix: {@cmd-prefix}
+	trigger:
+		if {-isPrestige::%player's uuid%} ? false = true:
+			send "{@error}Please wait!" to player
+			stop
+
+		set {_currentPrestige} to getOrDefault(player's prestige, 0)
+		set {_maxPrestige}     to {@prestige-max}
+		set {_cost}            to getPrestigeCost({_currentPrestige})
+
+		set {_newBoostTotal} to ({_currentPrestige} + 1) * {@prestige-boost-per-level}
+
+		create a gui with virtual chest inventory with 5 rows named "Prestige":
+
+			make gui slot (integers from 0 to 44)  with magenta stained glass pane without tooltip
+			make gui slot (integers from 0 to 8)   with white stained glass pane without tooltip
+			make gui slot (integers from 36 to 44) with gray stained glass pane without tooltip
+
+			make gui slot 21, 23                   with pink stained glass pane without tooltip
+			make gui slot (integers from 12 to 14) with pink stained glass pane without tooltip
+			make gui slot (integers from 30 to 32) with pink stained glass pane without tooltip
+			make gui slot 16, 25, 34               with purple stained glass pane without tooltip
+			make gui slot 10, 19, 28               with purple stained glass pane without tooltip
+			make gui slot 17, 26, 35               with iron bars without tooltip
+			make gui slot 9, 18, 27                with iron bars without tooltip
+
+			make gui slot 40 with red dye named "{@error2}&lCLOSE":
+				close player's inventory
+				stop
+
+			set {_tagNow} to getPrestigeTag({_currentPrestige})
+			set {_boostNow} to {_currentPrestige} * {@prestige-boost-per-level}
+			make gui slot 13 with amethyst shard named "<##ff89f9>&lYOUR PRESTIGE" with lore "&8ᴘʀᴇꜱᴛɪɢᴇ", "", "&fLevel: %{_tagNow}%", "&fBoost: {@success2}+%{_boostNow}%%%"
+
+			if {_currentPrestige} >= {_maxPrestige}:
+				make gui slot 22 with barrier named "<##ff28f4>&lPRESTIGE &8[{@c1}&lMAX&8]" with lore "&8ᴘʀᴇꜱᴛɪɢᴇ", "", "{@success2}ʏᴏᴜ'ᴠᴇ ʀᴇᴀᴄʜᴇᴅ ᴍᴀx ᴘʀᴇꜱᴛɪɢᴇ", "", "&7Total boost: {@success2}+%{_currentPrestige} * {@prestige-boost-per-level}%%%"
+			else:
+				make gui slot 22 with magenta dye named "<##ff28f4>&lPRESTIGE &8[{@c2}%{_currentPrestige}%&8/{@c2}%{_maxPrestige}%&8]" with lore "&8ᴘʀᴇꜱᴛɪɢᴇ", "", "&fPRICE: %canPurchase(player, {_cost})%$%format({_cost})%", "&fREWARDS: {@success2}+{@prestige-boost-per-level}%% MONEY BOOST &8(&7Total: +%{_newBoostTotal}%%%&8)", "", "{@error2}⚠ &7Your shovel & money will be {@error2}reset&7! {@error2}⚠", "", "&7ᴄʟɪᴄᴋ ᴛᴏ ᴘʀᴇꜱᴛɪɢᴇ":
+
+					set {_clickPrestige} to getOrDefault(player's prestige, 0)
+					set {_clickCost}     to getPrestigeCost({_clickPrestige})
+
+					if {_clickPrestige} >= {@prestige-max}:
+						play sound "block.note_block.bass" to player
+						send "{@error}You have reached max prestige!" to player
+						stop
+
+					if player's balance < {_clickCost}:
+						send "{@error}You need {@success2}$%format({_clickCost} - player's balance)% {@error2}more money!" to player
+						play sound "block.note_block.bass" to player
+						stop
+
+					set {-isPrestige::%player's uuid%} to true
+					close player's inventory
+
+					set player's balance to 0
+
+					resetPlayer(player)
+
+					add 1 to player's prestige
+					set {_newLevel} to player's prestige
+					set {_newTag}   to getPrestigeTag({_newLevel})
+
+					set player's suffix to "%{_newTag}%"
+					addTeam(player)
+
+					console command "pxmusic import the_farm2.json"
+					loop all players:
+						play and forget song "pxmusic:the_farm2" parsed as song with listeners loop-player
+
+					wait 1.5 seconds
+
+					send "" to all players
+					send "{@prefix}{@success2}%player% &fPRESTIGED TO &r%{_newTag}%&f!" to all players
+
+					delete {-isPrestige::%player's uuid%}
+					stop
+
+		open the last gui to player

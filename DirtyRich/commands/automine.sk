@@ -1,0 +1,159 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+import:
+	net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket
+	net.minecraft.core.BlockPos
+
+on load:
+	set {-am::hard::sand}                to 0.5
+	set {-am::hard::gravel}              to 0.6
+	set {-am::hard::red_concrete_powder} to 0.5
+	set {-am::hard::soul_sand}           to 0.5
+	set {-am::hard::dirt}                to 0.5
+
+	set {-am::spd::wooden_shovel}        to 2.0
+	set {-am::spd::stone_shovel}         to 4.0
+	set {-am::spd::iron_shovel}          to 6.0
+	set {-am::spd::golden_shovel}        to 12.0
+	set {-am::spd::diamond_shovel}       to 8.0
+	set {-am::spd::netherite_shovel}     to 9.0
+
+# ── PACKET HELPER ──────────────────────────────────────────────────────────
+function am_crack(p: player, l: location, eid: integer, stage: integer):
+	set {_pos} to new BlockPos(floor(x-coord of {_l}), floor(y-coord of {_l}), floor(z-coord of {_l}))
+	{_p}.getHandle().connection.send(new ClientboundBlockDestructionPacket({_eid}, {_pos}, {_stage}))
+
+# ── DAMAGE-PER-SWING ───────────────────────────────────────────────────────
+function am_dps(p: player, blockType: text) :: number:
+	set {_tool} to "%type of {_p}'s tool%"
+	set {_spd}  to {-am::spd::%{_tool}%} ? 1.0
+	set {_hard} to {-am::hard::%{_blockType}%} ? 0.5
+
+	set {_eff} to efficiency level of {_p}'s tool
+	if all:
+		{_eff} is set
+		{_eff} > 0
+	then:
+		set {_spd} to {_spd} + {_eff} * {_eff} + {_eff}
+
+	if {_p} has potion effect of haste:
+		set {_spd} to {_spd} * (1 + 0.2 * (amplifier of haste effect of {_p} + 1))
+
+	if {_p} has potion effect of mining fatigue:
+		loop amplifier of mining fatigue effect of {_p} + 1 times:
+			set {_spd} to {_spd} * 0.3
+
+	return {_spd} / ({_hard} * (30 if isShovel({_p}'s tool) = true else 100))
+
+function am_start(p: player, l: location):
+	set {_uuid} to "%{_p}'s uuid%"
+
+	if {-am::active::%{_uuid}%} is set:
+		am_stop({_p})
+	set {-am::active::%{_uuid}%} to "%floor(x-coord of {_l})%_%floor(y-coord of {_l})%_%floor(z-coord of {_l})%"
+	set {-am::active::%{_uuid}%::now} to now
+	set {-am::loc::%{_uuid}%}    to {_l}
+	set {-am::prog::%{_uuid}%}   to 0
+	set {-am::stage::%{_uuid}%}  to -1
+	add 1 to {-am::gen::%{_uuid}%}
+	am_loop({_p}, {_l}, {-am::gen::%{_uuid}%}, random integer between 1000000 and 9999999)
+
+function am_stop(p: player):
+	set {_uuid} to "%{_p}'s uuid%"
+	if {-am::eid::%{_uuid}%} is set:
+		am_crack({_p}, {-am::loc::%{_uuid}%}, {-am::eid::%{_uuid}%}, -1)
+	add 1 to {-am::gen::%{_uuid}%}
+	delete {-am::active::%{_uuid}%}
+	delete {-am::loc::%{_uuid}%}
+	delete {-am::prog::%{_uuid}%}
+	delete {-am::stage::%{_uuid}%}
+	delete {-am::eid::%{_uuid}%}
+
+# ── LOOP ───────────────────────────────────────────────────────────────────
+function am_loop(p: player, l: location, gen: integer, eid: integer):
+	set {_uuid} to "%{_p}'s uuid%"
+	set {-am::eid::%{_uuid}%} to {_eid}
+
+	while {-am::gen::%{_uuid}%} is {_gen}:
+		wait 2 ticks
+
+		if any:
+			distance between location of {_p} and {_l} > 6
+			{_p}'s target block is not block at {_l}
+			{_p} is not online
+			isShovel({_p}'s tool) = false
+		then:
+			am_stop({_p})
+			send "{@error}Auto Miner stopped." to {_p}
+			stop
+
+		if type of block at {_l} is air:
+			set {-am::prog::%{_uuid}%}  to 0
+			set {-am::stage::%{_uuid}%} to -1
+		else:
+			add am_dps({_p}, "%type of block at {_l}%") to {-am::prog::%{_uuid}%}
+			set {_prog} to {-am::prog::%{_uuid}%}
+
+			set {_s} to min(floor({_prog} * 10), 9)
+			if {_s} != {-am::stage::%{_uuid}%}:
+				set {-am::stage::%{_uuid}%} to {_s}
+				am_crack({_p}, {_l}, {_eid}, {_s})
+
+			if {_prog} >= 1:
+				am_crack({_p}, {_l}, {_eid}, -1)
+				{_p}.breakBlock(block at {_l})
+				set {-am::prog::%{_uuid}%}  to 0
+				set {-am::stage::%{_uuid}%} to -1
+
+on quit:
+	am_stop(player)
+
+# ── COMMAND ────────────────────────────────────────────────────────────────
+command /automine [<text>]:
+	description: Automatically mine a block.
+	cooldown: 30 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/automine [<stop>]
+	prefix: {@cmd-prefix}
+	aliases: /am
+	trigger:
+		set {_uuid} to "%player's uuid%"
+		if isShovel(player's tool) = false:
+			send "{@error}You need to hold a shovel!" to player
+			stop
+
+		if arg-1 is "stop":
+			if {-am::active::%{_uuid}%} is set:
+				am_stop(player)
+				send "{@success}Auto Miner stopped." to player
+			else:
+				send "{@error}No active auto miner." to player
+			stop
+
+		if any:
+			target block of player is not set
+			type of target block of player is air
+			distance between location of player and location of target block of player > 6
+		then:
+			send "{@error}No block in reach!" to player
+			stop
+
+		if {-am::active::%{_uuid}%} is set:
+			send "{@error}Already mining! Use &f/automine stop {@error2}to stop." to player
+			stop
+
+		am_start(player, location of target block of player)
+		send "{@success}Auto Miner started!" to player
+
+on tab complete of "/automine", "/am":
+	set tab completions for position 1 to "stop"

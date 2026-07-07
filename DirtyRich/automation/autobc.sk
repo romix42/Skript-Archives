@@ -1,0 +1,56 @@
+options:
+	prefix: <##ffff28><b>DIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+
+	error2: <##ff6060>
+	success2: <##92ff60>
+
+on load:
+	set {-broadcastMessageList::*} to 1, 2
+
+every 15 minutes:
+	autoBroadcast()
+
+every 60 minutes:
+	set {-broadcastMessageList::*} to 1
+
+function autoBroadcast(wait: boolean = true):
+	if {_wait} = true:
+		set {_r} to a random integer from 0 to 15
+		set {_wait} to "%{_r}% seconds" parsed as timespan
+		wait {_wait}
+
+	set {_r} to a random element out of {-broadcastMessageList::*}
+	if {_r} = 1:
+		set {-broadcastMessageList::*} to 2
+		clear {_msg::*}
+		add raw "<gradient:#555555:#AAAAAA:#555555><st>" + " ".repeat(30) to {_msg::*}
+		add raw "<reset>" to {_msg::*}
+		add raw "        <#765eff><b>DISCORD" to {_msg::*}
+		add raw "" to {_msg::*}
+		add raw "<white>Join our <##765eff>discord <white>server." to {_msg::*}
+		add raw "<white>We post updates, giveaways, and more!" to {_msg::*}
+		add raw "" to {_msg::*}
+		add raw "<hover:show_text:'<white>Click'><click:run_command:'/discord'><#5a3dff>Click here to join." to {_msg::*}
+		add raw "<reset>" to {_msg::*}
+		add raw "<gradient:#555555:#AAAAAA:#555555><st>" + " ".repeat(30) to {_msg::*}
+		set {_msg} to join {_msg::*} using raw "<reset>%nl%"
+		send component mini message from {_msg} to all players
+
+	if {_r} = 2:
+		set {-broadcastMessageList::*} to 1
+		clear {_msg::*}
+		add raw "<gradient:#555555:#AAAAAA:#555555><st>" + " ".repeat(30) to {_msg::*}
+		add raw "<reset>" to {_msg::*}
+		add raw "        <#5eff74><b>STORE" to {_msg::*}
+		add raw "" to {_msg::*}
+		add raw "<white>Visit our <#5eff74>store <white>and buy honey." to {_msg::*}
+		add raw "<white>Honey can be used to buy ranks," to {_msg::*}
+		add raw "<white>keys and much more!" to {_msg::*}
+		add raw "" to {_msg::*}
+		add raw "<hover:show_text:'<white>Click'><click:run_command:'/store'><#5eff74>Click here to open." to {_msg::*}
+		add raw "<reset>" to {_msg::*}
+		add raw "<gradient:#555555:#AAAAAA:#555555><st>" + " ".repeat(30) to {_msg::*}
+		set {_msg} to join {_msg::*} using raw "<reset>%nl%"
+		send component mini message from {_msg} to all players

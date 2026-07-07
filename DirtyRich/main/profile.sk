@@ -1,0 +1,106 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+import:
+    net.minecraft.util.Mth
+
+function getBodyYaw(player: player) :: number:
+    return Mth.wrapDegrees({_player}.getBodyYaw())
+
+function smallCaps(text: text) :: text:
+    set {_smallcaps::*} to "ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘqʀꜱᴛᴜᴠᴡxʏᴢ" split at ""
+    set {_normal} to "abcdefghijklmnopqrstuvwxyz"
+    loop {_normal} split at "":
+        set {_text} to ({_text} in lowercase).replaceAll("%loop-value%", "%{_smallcaps::%loop-counter%}%")
+    return {_text}
+
+function getProfileText(target: player) :: text:
+	set {_text} to "{@c1}&l%smallCaps(name of {_target})%%nl%&7ᴘʀᴏғɪʟᴇ%nl%%nl%"
+	set {_text} to "%{_text}%{@c2}❱ &fRank: %{_target}'s prefix%%nl%"
+	set {_text} to "%{_text}%{@c2}❱ &fStatus: &aOnline%nl%"
+	set {_text} to "%{_text}%%nl%"
+	set {_text} to "%{_text}%{@c2}❱ &fMoney: <##34ff34>$%format({_target}'s balance)%%nl%"
+	set {_text} to "%{_text}%{@c2}❱ &fHoney: <##ffb516>%Format({_target}'s honey)%%nl%"
+	set {_text} to "%{_text}%{@c2}❱ &fPlaytime: <##eeff34>%formatTime(play_one_minute stat for {_target})%"
+	
+	return {_text}
+
+on right click on a player:
+	player is sneaking
+	set {_target} to clicked player
+	
+	set {_now} to metadata value "profile_cooldown" of player parsed as timespan
+	if difference between now and {_now} ? now + 2 second < 1 second:
+		stop
+	
+	if metadata value "profile_display" of player is set:
+		if metadata value "profile_player" of player = {_target}:
+			kill metadata value "profile_display" of player
+			stop
+		else:
+			kill metadata value "profile_display" of player
+			wait 1 tick
+
+	spawn text display at {_target}
+	set {_display} to last spawned entity
+	hide {_display} from all players
+
+	set text of {_display} to getProfileText({_target})
+	set display scale of {_display} to vector(0.5, 0.5, 0.5)
+	set text opacity of {_display} to 255
+	set text alignment of {_display} to left aligned
+	set billboard of {_display} to fixed
+	set sky light override of {_display} to 15
+
+	set metadata value "profile" of {_display} to true
+	set metadata value "profile_display" of player to {_display}
+	set metadata value "profile_cooldown" of player to now
+	set metadata value "profile_player" of player to {_target}
+	
+	reveal {_display} to player
+	
+	set {_refresh} to 0
+	set {_kill} to 0
+	while {_target} is online:
+		if any:
+			metadata value "profile_display" of player is not set
+			{_display} isn't alive
+		then:
+			exit loop
+			
+		set {_loc} to location of {_target}
+		set {_offset} to {_loc}
+		set y-coord of {_loc} to (y-coord of {_loc} + 0.55)
+		set pitch of {_loc} to 0
+		set the yaw of {_loc} to getBodyYaw( {_target} )
+		set {_offset} to location 1.2 blocks left of {_loc}
+		teleport {_display} to {_offset}
+		
+		add 1 to {_refresh}
+		if {_refresh} >= 20:
+			set text of {_display} to getProfileText({_target})
+			set {_refresh} to 0
+			add 1 to {_kill}
+		if {_kill} >= 10:
+			exit loop
+		wait 1 tick
+	
+	kill {_display}
+	delete metadata value "profile_display" of player
+	delete metadata value "profile_player" of player
+	set metadata value "profile_cooldown" of player to now
+
+on quit:
+	kill (metadata value "profile_display" of player)
+
+on script unload:
+	kill all text displays where [input has metadata value "profile"]

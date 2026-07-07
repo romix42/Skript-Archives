@@ -1,0 +1,94 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+command /pay [<offline player>] [<string>] [<string>]:
+	description: Pay players money or honey.
+	prefix: {@cmd-prefix}
+	usage: {@error}Usage: &f/pay <player> <number> <honey|money>
+	cooldown: 2.5 seconds
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	trigger:
+		if any:
+			arg-1 isn't set
+			arg-2 isn't set
+			arg-3 isn't set
+		then:
+			send usage to player
+			stop
+
+		set {_money} to abs(textToNumber(arg-2))
+
+		if arg-1 is player:
+			send "{@error}You can't pay yourself!" to player
+			stop
+
+		if arg-1 isn't online:
+			send "{@error}This player isn't online" to player
+			stop
+
+		if any:
+			"%player%" starts with "."
+			"%arg-1%"  starts with "."
+		then:
+			send "{@error}This feature is only for Java players!" to player
+			stop
+
+		if hasRank(player) = false:
+			if difference between now and ({linked::player::%player's uuid%::date} ? now) < 24 hours:
+				send "{@error}You need to be linked for &f24 hours{@error2}! &7(&f%24 hours - difference between now and {linked::player::%player's uuid%::date} ? now%&7)" to player
+				stop
+
+		if hasRank(arg-1) = false:
+			if difference between now and ({linked::player::%arg-1's uuid%::date} ? now) < 24 hours:
+				send "{@error}%arg-1% needs to be linked for &f24 hours{@error2}! &7(&f%24 hours - difference between now and {linked::player::%arg-1's uuid%::date} ? now%&7)" to player
+				stop
+
+		if arg-3 = "MONEY":
+			if player's balance < {_money}:
+				send "{@error}You don't have enough money!" to player
+				stop
+			remove {_money} from player's balance
+			add {_money} to arg-1's balance
+			send "{@success}&fSent {@c1}$%{_money}% {@success2}money &fto {@c1}%arg-1%&f!" to player
+			send "{@prefix}{@c1}%player% &fsent you {@c1}$%{_money}% {@success2}money&f!" to arg-1 if arg-1 is online
+			log "%player% sent %{_money}% money ($) to %arg-1%" to file "pay.log"
+			stop
+		else if arg-3 = "HONEY":
+			if player's honey < {_money}:
+				send "{@error}You don't have enough honey!" to player
+				stop
+			remove {_money} from player's honey
+			add {_money} to arg-1's honey
+			send "{@success}&fSent {@c1}$%{_money}% {@success2}honey &fto {@c1}%arg-1%&f!" to player
+			send "{@prefix}{@c1}%player% &fsent you {@c1}%{_money}% {@success2}honey&f!" to arg-1 if arg-1 is online
+			log "%player% sent %{_money}% honey (¤) to %arg-1%" to file "pay.log"
+			stop
+
+		else:
+			send "{@error}Invalid currency: &f%arg-3%{@error2}." to player
+			stop
+
+function textToNumber(t: text) :: number:
+	set {_t} to {_t} in uppercase
+	set {_data::*} to "QT,18", "Q,15", "T,12", "B,9", "M,6", "K,3"
+	loop {_data::*}:
+		set {_s::*} to split loop-value at ","
+		if {_t} ends with "%{_s::1}%":
+			set {_parts::*} to split {_t} at {_s::1}
+			set {_n} to {_parts::1} parsed as number
+			return {_n} * (10 ^ ({_s::2} parsed as number))
+	return {_t} parsed as number
+
+on tab complete of "/pay":
+	set tab completions for position 1 to all players where [input isn't player]
+	set tab completions for position 2 to "100", "500", "10k", "1m", "20m"
+	set tab completions for position 3 to "MONEY", "HONEY"

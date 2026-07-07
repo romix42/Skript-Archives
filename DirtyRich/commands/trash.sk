@@ -1,0 +1,55 @@
+options:
+	prefix: <##ffff28>&lDIRTYRICH &8| &f 
+	c1: <##ffff28>
+	c2: <##ffff74>
+	
+	cmd-prefix: dirtyrich
+
+	error: <##fd7474>❌ ᴇʀʀᴏʀ: <##ff6060>
+	error2: <##ff6060>
+	success: <##74fd7b>✔ ꜱᴜᴄᴄᴇꜱꜱ: <##92ff60>
+	success2: <##92ff60>
+
+command /trash:
+	description: Throw away your items like my life.
+	cooldown: 15 ticks
+	cooldown message: {@error}Please wait &f%remaining time%{@error2}!
+	usage: {@error2}Usage: &f/trash
+	prefix: {@cmd-prefix}
+	aliases: /bin, /rubbish, /litter, /junk, /garbage
+	trigger:
+		open (chest inventory with 4 rows named "Trash  —  DELETES YOUR ITEMS") to player
+
+on inventory click:
+	name of event-inventory contains "Trash"
+	if any:
+		isShovel({_item}) = true
+		isRod({_item}) = true
+	then:
+		cancel event
+
+on inventory close:
+	name of event-inventory contains "Trash"
+	stop if size of all items of event-inventory <= 0
+
+	send "{@prefix}Trashed:" to player
+	loop all items of event-inventory:
+		if name of loop-item is set:
+			set {_name} to formatToMiniMessage(raw "%name of loop-item%")
+
+		else if component item name of loop-item is set:
+			set {_name} to formatCompName(loop-item)
+
+		else:
+			set {_name} to formatToMiniMessage(raw "%type of loop-item%")
+
+		if any:
+			isShovel(loop-item) = true
+			isRod(loop-item) = true
+		then:
+			give loop-item to player
+			send " {@c2}+ {@success2}%{_name}%" to player
+		else:
+			send " {@c2}- {@error2}%{_name}%" to player
+
+	send "" to player
